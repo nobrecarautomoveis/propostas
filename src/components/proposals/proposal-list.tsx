@@ -8,7 +8,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, MoreHorizontal } from "lucide-react";
-import Link from 'next/link';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ProposalForm } from './proposal-form';
 
 const mockProposals = [
   { id: 'PROP-001', brand: 'Volkswagen', model: 'Nivus', year: 2023, value: 130000, type: 'Financiamento', status: 'Em Análise', state: 'SP' },
@@ -26,6 +27,7 @@ const statusVariant: { [key: string]: "default" | "secondary" | "destructive" | 
 
 export function ProposalList() {
     const [search, setSearch] = useState('');
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const filteredProposals = mockProposals.filter(p => 
         p.brand.toLowerCase().includes(search.toLowerCase()) ||
@@ -33,84 +35,93 @@ export function ProposalList() {
     );
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between gap-4">
-            <div>
-                <CardTitle>Propostas</CardTitle>
-                <CardDescription>
-                  Gerencie suas propostas de financiamento e refinanciamento.
-                </CardDescription>
-            </div>
-            <Link href="/propostas/nova" passHref>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Nova Proposta
-              </Button>
-            </Link>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <div className="flex items-center gap-2">
-              <Input
-                placeholder="Buscar por marca ou modelo..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="max-w-sm"
-              />
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-4">
+              <div>
+                  <CardTitle>Propostas</CardTitle>
+                  <CardDescription>
+                    Gerencie suas propostas de financiamento e refinanciamento.
+                  </CardDescription>
+              </div>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Nova Proposta
+                </Button>
+              </DialogTrigger>
           </div>
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Marca/Modelo</TableHead>
-                <TableHead className="hidden md:table-cell">Ano</TableHead>
-                <TableHead className="hidden md:table-cell">Valor</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead><span className="sr-only">Ações</span></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-                {filteredProposals.length > 0 ? (
-                    filteredProposals.map((proposal) => (
-                        <TableRow key={proposal.id}>
-                            <TableCell>
-                                <div className="font-medium">{proposal.brand}</div>
-                                <div className="text-sm text-muted-foreground">{proposal.model}</div>
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">{proposal.year}</TableCell>
-                            <TableCell className="hidden md:table-cell">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(proposal.value)}</TableCell>
-                            <TableCell>{proposal.type}</TableCell>
-                            <TableCell><Badge variant={statusVariant[proposal.status] || 'outline'}>{proposal.status}</Badge></TableCell>
-                            <TableCell>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive focus:bg-destructive/90 focus:text-destructive-foreground">Excluir</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </TableCell>
-                        </TableRow>
-                    ))
-                ) : (
-                    <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
-                            Nenhuma proposta encontrada.
-                        </TableCell>
-                    </TableRow>
-                )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Buscar por marca ou modelo..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="max-w-sm"
+                />
+            </div>
+          </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Marca/Modelo</TableHead>
+                  <TableHead className="hidden md:table-cell">Ano</TableHead>
+                  <TableHead className="hidden md:table-cell">Valor</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead><span className="sr-only">Ações</span></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                  {filteredProposals.length > 0 ? (
+                      filteredProposals.map((proposal) => (
+                          <TableRow key={proposal.id}>
+                              <TableCell>
+                                  <div className="font-medium">{proposal.brand}</div>
+                                  <div className="text-sm text-muted-foreground">{proposal.model}</div>
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell">{proposal.year}</TableCell>
+                              <TableCell className="hidden md:table-cell">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(proposal.value)}</TableCell>
+                              <TableCell>{proposal.type}</TableCell>
+                              <TableCell><Badge variant={statusVariant[proposal.status] || 'outline'}>{proposal.status}</Badge></TableCell>
+                              <TableCell>
+                                  <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" size="icon">
+                                              <MoreHorizontal className="h-4 w-4" />
+                                          </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                          <DropdownMenuItem>Editar</DropdownMenuItem>
+                                          <DropdownMenuItem className="text-destructive focus:bg-destructive/90 focus:text-destructive-foreground">Excluir</DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                  </DropdownMenu>
+                              </TableCell>
+                          </TableRow>
+                      ))
+                  ) : (
+                      <TableRow>
+                          <TableCell colSpan={6} className="h-24 text-center">
+                              Nenhuma proposta encontrada.
+                          </TableCell>
+                      </TableRow>
+                  )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+              <DialogTitle>Nova Proposta de Veículo</DialogTitle>
+              <DialogDescription>Preencha os campos abaixo para criar uma nova proposta.</DialogDescription>
+          </DialogHeader>
+          <ProposalForm onFinished={() => setIsDialogOpen(false)} />
+      </DialogContent>
+    </Dialog>
   );
 }

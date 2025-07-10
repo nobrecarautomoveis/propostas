@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -33,9 +32,12 @@ const formSchema = z.object({
   licensingLocation: z.string().min(2, "Mínimo 2 caracteres."),
 });
 
-export function ProposalForm() {
+type ProposalFormProps = {
+  onFinished?: () => void;
+};
+
+export function ProposalForm({ onFinished }: ProposalFormProps) {
   const { toast } = useToast();
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -56,13 +58,15 @@ export function ProposalForm() {
       description: "Sua proposta foi criada com sucesso.",
     });
     
-    router.push('/propostas');
     setIsSubmitting(false);
+    if (onFinished) {
+      onFinished();
+    }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pt-4">
         <div className="grid md:grid-cols-2 gap-8">
             <FormField control={form.control} name="proposalType" render={({ field }) => (
                 <FormItem>
