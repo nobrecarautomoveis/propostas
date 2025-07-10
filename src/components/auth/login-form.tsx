@@ -38,8 +38,8 @@ export function LoginForm() {
     setIsLoading(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    // On success, redirect to dashboard
-    router.push('/dashboard');
+    // On success, redirect to proposals
+    router.push('/propostas');
   }
 
   return (

@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, MicVocal } from "lucide-react";
+import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: '/dashboard', label: 'Conversas', icon: MicVocal },
   { href: '/propostas', label: 'Propostas', icon: FileText },
 ];
 
