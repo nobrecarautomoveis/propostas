@@ -70,7 +70,8 @@ export function ProposalForm() {
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                         <SelectContent><SelectItem value="financing">Financiamento</SelectItem><SelectItem value="refinancing">Refinanciamento</SelectItem></SelectContent>
-                    </Select><FormMessage />
+                    </Select>
+                    <FormMessage />
                 </FormItem>
             )}/>
             <FormField control={form.control} name="vehicleType" render={({ field }) => (
@@ -79,7 +80,8 @@ export function ProposalForm() {
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                         <SelectContent><SelectItem value="car">Carro</SelectItem><SelectItem value="motorcycle">Moto</SelectItem></SelectContent>
-                    </Select><FormMessage />
+                    </Select>
+                    <FormMessage />
                 </FormItem>
             )}/>
         </div>
@@ -92,7 +94,8 @@ export function ProposalForm() {
                             <FormItem className="flex items-center space-x-2"><FormControl><RadioGroupItem value="new" /></FormControl><FormLabel className="font-normal">Novo</FormLabel></FormItem>
                             <FormItem className="flex items-center space-x-2"><FormControl><RadioGroupItem value="used" /></FormControl><FormLabel className="font-normal">Usado</FormLabel></FormItem>
                         </RadioGroup>
-                    </FormControl><FormMessage />
+                    </FormControl>
+                    <FormMessage />
                 </FormItem>
             )}/>
             <FormField control={form.control} name="isFinanced" render={({ field }) => (
@@ -104,7 +107,7 @@ export function ProposalForm() {
         </div>
          <div className="grid md:grid-cols-2 gap-8">
             <FormField control={form.control} name="brand" render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input placeholder="Ex: Volkswagen" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-            <FormField control={form.control} name="model" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input placeholder="Ex: Nivus" {...field} /></FormControl><FormMessage /></FormMessage>)}/>
+            <FormField control={form.control} name="model" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input placeholder="Ex: Nivus" {...field} /></FormControl><FormMessage /></FormItem>)}/>
         </div>
         <div className="grid md:grid-cols-2 gap-8">
              <FormField control={form.control} name="modelYear" render={({ field }) => (<FormItem><FormLabel>Ano Modelo</FormLabel><FormControl><Input type="number" placeholder="2024" {...field} /></FormControl><FormMessage /></FormItem>)}/>
@@ -117,7 +120,8 @@ export function ProposalForm() {
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                         <SelectContent><SelectItem value="flex">Flex</SelectItem><SelectItem value="gasoline">Gasolina</SelectItem><SelectItem value="diesel">Diesel</SelectItem><SelectItem value="electric">Elétrico</SelectItem><SelectItem value="hybrid">Híbrido</SelectItem></SelectContent>
-                    </Select><FormMessage />
+                    </Select>
+                    <FormMessage />
                 </FormItem>
             )}/>
              <FormField control={form.control} name="transmission" render={({ field }) => (
@@ -126,7 +130,8 @@ export function ProposalForm() {
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                         <SelectContent><SelectItem value="automatic">Automática</SelectItem><SelectItem value="manual">Manual</SelectItem></SelectContent>
-                    </Select><FormMessage />
+                    </Select>
+                    <FormMessage />
                 </FormItem>
             )}/>
         </div>
