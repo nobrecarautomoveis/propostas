@@ -2,25 +2,16 @@
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, CircleUser } from "lucide-react";
+import { CircleUser } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 export function Header() {
-  const pathname = usePathname();
-
-  const getPageTitle = () => {
-    if (pathname.startsWith('/propostas/nova')) return 'Nova Proposta';
-    if (pathname.startsWith('/propostas')) return 'Propostas';
-    return 'Gerenciador';
-  };
-
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-card px-4 sm:px-6">
-      <div className="flex-1">
-        <h1 className="text-xl font-semibold md:text-center">{getPageTitle()}</h1>
-      </div>
+    <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b bg-card px-4 sm:px-6">
+      <Link href="/propostas">
+          <Image src="/logo.png" alt="Nobrecar Automóveis Logo" width={180} height={60} />
+      </Link>
 
       <div className="ml-auto">
         <DropdownMenu>
