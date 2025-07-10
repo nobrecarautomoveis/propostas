@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Fale Mais Fácil',
-  description: 'Grave, transcreva e analise suas conversas com facilidade.',
+  title: 'Gerenciador de Propostas',
+  description: 'Gerencie suas propostas de forma eficiente.',
 };
 
 export default function RootLayout({
