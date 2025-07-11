@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { CircleUser } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { ThemeToggle } from "./theme-toggle";
 
 export function Header() {
   return (
@@ -13,7 +14,8 @@ export function Header() {
           <Image src="/logo.png" alt="Nobrecar Automóveis Logo" width={180} height={60} />
       </Link>
 
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-4">
+        <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="icon" className="rounded-full">
