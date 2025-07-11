@@ -19,19 +19,27 @@ const formSchema = z.object({
   isFinanced: z.boolean().default(false),
   vehicleCondition: z.enum(["new", "used"], { required_error: "Selecione a condição." }),
   plate: z.string().optional(),
-  brand: z.string().min(2, "Mínimo 2 caracteres."),
-  model: z.string().min(2, "Mínimo 2 caracteres."),
-  bodywork: z.string().optional(),
-  modelYear: z.coerce.number().min(1950, "Ano inválido.").max(new Date().getFullYear() + 1, "Ano inválido."),
-  manufactureYear: z.coerce.number().min(1950, "Ano inválido.").max(new Date().getFullYear(), "Ano inválido."),
-  version: z.string().optional(),
+  brand: z.string({ required_error: "A marca é obrigatória." }).min(2, "Mínimo 2 caracteres."),
+  model: z.string({ required_error: "O modelo é obrigatório." }).min(2, "Mínimo 2 caracteres."),
+  bodywork: z.string({ required_error: "A carroceria é obrigatória." }).min(2, "Mínimo 2 caracteres."),
+  modelYear: z.coerce.number({ required_error: "O ano do modelo é obrigatório." }).min(1950, "Ano inválido.").max(new Date().getFullYear() + 1, "Ano inválido."),
+  manufactureYear: z.coerce.number({ required_error: "O ano de fabricação é obrigatório." }).min(1950, "Ano inválido.").max(new Date().getFullYear(), "Ano inválido."),
+  version: z.string({ required_error: "A versão é obrigatória." }).min(1, "A versão é obrigatória."),
   fuel: z.string({ required_error: "Selecione o combustível." }),
   transmission: z.string({ required_error: "Selecione a transmissão." }),
-  color: z.string().min(2, "Mínimo 2 caracteres."),
-  value: z.coerce.number().positive("O valor deve ser positivo."),
+  color: z.string({ required_error: "A cor é obrigatória." }).min(2, "Mínimo 2 caracteres."),
+  value: z.coerce.number({ required_error: "O valor é obrigatório." }).positive("O valor deve ser positivo."),
   licensingLocation: z.string({ required_error: "Selecione o estado." }),
   status: z.enum(['Em Análise', 'Aprovada', 'Recusada'], { required_error: "Selecione o status da proposta." }),
   state: z.string().optional(), // Adding state to schema
+}).superRefine((data, ctx) => {
+    if (data.vehicleCondition === 'used' && (!data.plate || data.plate.trim() === '')) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['plate'],
+            message: 'A placa é obrigatória para veículos usados.',
+        });
+    }
 });
 
 export type ProposalFormData = z.infer<typeof formSchema>;
@@ -62,6 +70,7 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
     defaultValues: {
       isFinanced: false,
       status: 'Em Análise',
+      plate: '',
     },
   });
 
@@ -126,7 +135,7 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
               </FormItem>
           )}/>
            <FormField control={form.control} name="isFinanced" render={({ field }) => (
-                <FormItem className="flex flex-col justify-center space-y-2">
+                <FormItem className="flex flex-col space-y-2 pt-1">
                     <FormLabel>Veículo já financiado?</FormLabel>
                     <FormControl>
                     <div className="flex h-10 items-center">
@@ -149,16 +158,20 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
                   <FormMessage />
               </FormItem>
           )}/>
-          <FormField control={form.control} name="plate" render={({ field }) => (<FormItem><FormLabel>Placa (Opcional)</FormLabel><FormControl><Input placeholder="ABC-1234" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+          <FormField control={form.control} name="plate" render={({ field }) => (<FormItem><FormLabel>Placa</FormLabel><FormControl><Input placeholder="ABC-1234" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="brand" render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input placeholder="Ex: Volkswagen" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           
           {/* Row 3 */}
           <FormField control={form.control} name="model" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input placeholder="Ex: Nivus" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+          <FormField control={form.control} name="bodywork" render={({ field }) => (<FormItem><FormLabel>Carroceria</FormLabel><FormControl><Input placeholder="Ex: SUV" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+          <FormField control={form.control} name="version" render={({ field }) => (<FormItem><FormLabel>Versão</FormLabel><FormControl><Input placeholder="Ex: Highline" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+
+          {/* Row 4 */}
           <FormField control={form.control} name="modelYear" render={({ field }) => (<FormItem><FormLabel>Ano Modelo</FormLabel><FormControl><Input type="number" placeholder="2024" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="manufactureYear" render={({ field }) => (<FormItem><FormLabel>Ano Fabricação</FormLabel><FormControl><Input type="number" placeholder="2023" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-          
-          {/* Row 4 */}
           <FormField control={form.control} name="color" render={({ field }) => (<FormItem><FormLabel>Cor</FormLabel><FormControl><Input placeholder="Ex: Branco" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+          
+          {/* Row 5 */}
           <FormField control={form.control} name="fuel" render={({ field }) => (
               <FormItem>
                   <FormLabel>Combustível</FormLabel>
@@ -179,8 +192,6 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
                   <FormMessage />
               </FormItem>
           )}/>
-          
-          {/* Row 5 */}
           <FormField control={form.control} name="value" render={({ field }) => (
             <FormItem>
               <FormLabel>Valor do Veículo</FormLabel>
@@ -195,6 +206,8 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
               <FormMessage />
             </FormItem>
           )}/>
+
+          {/* Row 6 */}
           <FormField control={form.control} name="licensingLocation" render={({ field }) => (
               <FormItem>
                   <FormLabel>Local de Licenciamento</FormLabel>
