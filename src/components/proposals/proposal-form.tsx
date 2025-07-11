@@ -16,8 +16,8 @@ import { useState } from 'react';
 const formSchema = z.object({
   proposalType: z.string({ required_error: "Selecione o tipo de proposta." }),
   vehicleType: z.string({ required_error: "Selecione o tipo de veículo." }),
-  vehicleCondition: z.enum(["new", "used"], { required_error: "Selecione a condição." }),
   isFinanced: z.boolean().default(false),
+  vehicleCondition: z.enum(["new", "used"], { required_error: "Selecione a condição." }),
   plate: z.string().optional(),
   brand: z.string().min(2, "Mínimo 2 caracteres."),
   model: z.string().min(2, "Mínimo 2 caracteres."),
@@ -90,7 +90,15 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
                   <FormMessage />
               </FormItem>
           )}/>
-           <FormField control={form.control} name="vehicleCondition" render={({ field }) => (
+           <FormField control={form.control} name="isFinanced" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm h-16">
+                  <div className="space-y-0.5"><FormLabel>Veículo já financiado?</FormLabel></div>
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+              </FormItem>
+          )}/>
+
+          {/* Row 2 */}
+          <FormField control={form.control} name="vehicleCondition" render={({ field }) => (
               <FormItem className="space-y-3 pt-2">
                   <FormLabel>Condição do Veículo</FormLabel>
                   <FormControl>
@@ -102,18 +110,16 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
                   <FormMessage />
               </FormItem>
           )}/>
-
-          {/* Row 2 */}
           <FormField control={form.control} name="plate" render={({ field }) => (<FormItem><FormLabel>Placa (Opcional)</FormLabel><FormControl><Input placeholder="ABC-1234" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="brand" render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input placeholder="Ex: Volkswagen" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-          <FormField control={form.control} name="model" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input placeholder="Ex: Nivus" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           
           {/* Row 3 */}
+          <FormField control={form.control} name="model" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input placeholder="Ex: Nivus" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="modelYear" render={({ field }) => (<FormItem><FormLabel>Ano Modelo</FormLabel><FormControl><Input type="number" placeholder="2024" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="manufactureYear" render={({ field }) => (<FormItem><FormLabel>Ano Fabricação</FormLabel><FormControl><Input type="number" placeholder="2023" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-          <FormField control={form.control} name="color" render={({ field }) => (<FormItem><FormLabel>Cor</FormLabel><FormControl><Input placeholder="Ex: Branco" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           
           {/* Row 4 */}
+          <FormField control={form.control} name="color" render={({ field }) => (<FormItem><FormLabel>Cor</FormLabel><FormControl><Input placeholder="Ex: Branco" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="fuel" render={({ field }) => (
               <FormItem>
                   <FormLabel>Combustível</FormLabel>
@@ -134,16 +140,10 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
                   <FormMessage />
               </FormItem>
           )}/>
-          <FormField control={form.control} name="value" render={({ field }) => (<FormItem><FormLabel>Valor do Veículo (R$)</FormLabel><FormControl><Input type="number" placeholder="130000" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           
           {/* Row 5 */}
+          <FormField control={form.control} name="value" render={({ field }) => (<FormItem><FormLabel>Valor do Veículo (R$)</FormLabel><FormControl><Input type="number" placeholder="130000" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="licensingLocation" render={({ field }) => (<FormItem><FormLabel>Local de Licenciamento</FormLabel><FormControl><Input placeholder="Ex: São Paulo, SP" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-          <FormField control={form.control} name="isFinanced" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm mt-3 h-16">
-                  <div className="space-y-0.5"><FormLabel>Veículo já financiado?</FormLabel></div>
-                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-              </FormItem>
-          )}/>
 
         </div>
 
