@@ -109,6 +109,9 @@ export function ProposalForm({ onFinished }: ProposalFormProps) {
                 </FormItem>
             )}/>
         </div>
+        <div className="grid md:grid-cols-2 gap-8">
+            <FormField control={form.control} name="plate" render={({ field }) => (<FormItem><FormLabel>Placa (Opcional)</FormLabel><FormControl><Input placeholder="ABC-1234" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+        </div>
          <div className="grid md:grid-cols-2 gap-8">
             <FormField control={form.control} name="brand" render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input placeholder="Ex: Volkswagen" {...field} /></FormControl><FormMessage /></FormItem>)}/>
             <FormField control={form.control} name="model" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input placeholder="Ex: Nivus" {...field} /></FormControl><FormMessage /></FormItem>)}/>
@@ -145,7 +148,6 @@ export function ProposalForm({ onFinished }: ProposalFormProps) {
         </div>
          <div className="grid md:grid-cols-2 gap-8">
             <FormField control={form.control} name="licensingLocation" render={({ field }) => (<FormItem><FormLabel>Local de Licenciamento</FormLabel><FormControl><Input placeholder="Ex: São Paulo, SP" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-            <FormField control={form.control} name="plate" render={({ field }) => (<FormItem><FormLabel>Placa (Opcional)</FormLabel><FormControl><Input placeholder="ABC-1234" {...field} /></FormControl><FormMessage /></FormItem>)}/>
         </div>
 
         <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto">
