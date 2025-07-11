@@ -102,7 +102,7 @@ export function ProposalList() {
               <CardHeader>
                 <div className="flex items-center justify-between gap-4">
                     <div>
-                        <CardTitle>Propostas</CardTitle>
+                        <CardTitle className="mb-1">Propostas</CardTitle>
                         <CardDescription>
                           Gerencie suas propostas de financiamento e refinanciamento.
                         </CardDescription>
