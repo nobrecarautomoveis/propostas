@@ -18,11 +18,11 @@ type Proposal = ProposalFormData & {
 };
 
 const initialProposals: Proposal[] = [
-  { id: 'PROP-001', proposalType: 'financing', vehicleType: 'car', vehicleCondition: 'used', isFinanced: false, brand: 'Volkswagen', model: 'Nivus', modelYear: 2023, manufactureYear: 2023, value: 130000, status: 'Em Análise', state: 'SP', fuel: 'flex', transmission: 'automatic', color: 'Branco', licensingLocation: 'São Paulo, SP', dateAdded: new Date(2023, 10, 5) },
-  { id: 'PROP-002', proposalType: 'financing', vehicleType: 'car', vehicleCondition: 'new', isFinanced: false, brand: 'Honda', model: 'Civic', modelYear: 2024, manufactureYear: 2024, value: 160000, status: 'Aprovada', state: 'RJ', fuel: 'flex', transmission: 'automatic', color: 'Preto', licensingLocation: 'Rio de Janeiro, RJ', dateAdded: new Date(2023, 10, 8) },
-  { id: 'PROP-003', proposalType: 'refinancing', vehicleType: 'car', vehicleCondition: 'used', isFinanced: true, brand: 'Fiat', model: 'Toro', modelYear: 2022, manufactureYear: 2022, value: 145000, status: 'Recusada', state: 'MG', fuel: 'diesel', transmission: 'automatic', color: 'Vinho', licensingLocation: 'Belo Horizonte, MG', dateAdded: new Date(2023, 10, 12) },
-  { id: 'PROP-004', proposalType: 'financing', vehicleType: 'car', vehicleCondition: 'used', isFinanced: false, brand: 'Hyundai', model: 'Creta', modelYear: 2023, manufactureYear: 2023, value: 135000, status: 'Aprovada', state: 'SP', fuel: 'flex', transmission: 'automatic', color: 'Prata', licensingLocation: 'Campinas, SP', dateAdded: new Date(2023, 10, 15) },
-  { id: 'PROP-005', proposalType: 'financing', vehicleType: 'motorcycle', vehicleCondition: 'new', isFinanced: false, brand: 'Chevrolet', model: 'Onix', modelYear: 2024, manufactureYear: 2024, value: 95000, status: 'Em Análise', state: 'BA', fuel: 'flex', transmission: 'manual', color: 'Azul', licensingLocation: 'Salvador, BA', dateAdded: new Date(2023, 10, 20) },
+  { id: 'PROP-001', proposalType: 'financing', vehicleType: 'car', vehicleCondition: 'used', isFinanced: false, brand: 'Volkswagen', model: 'Nivus', modelYear: 2023, manufactureYear: 2023, value: 130000, status: 'Em Análise', state: 'SP', fuel: 'flex', transmission: 'automatic', color: 'Branco', licensingLocation: 'SP', dateAdded: new Date(2023, 10, 5), version: 'Highline', bodywork: 'SUV' },
+  { id: 'PROP-002', proposalType: 'financing', vehicleType: 'car', vehicleCondition: 'new', isFinanced: false, brand: 'Honda', model: 'Civic', modelYear: 2024, manufactureYear: 2024, value: 160000, status: 'Aprovada', state: 'RJ', fuel: 'flex', transmission: 'automatic', color: 'Preto', licensingLocation: 'RJ', dateAdded: new Date(2023, 10, 8), version: 'Touring', bodywork: 'Sedan' },
+  { id: 'PROP-003', proposalType: 'refinancing', vehicleType: 'car', vehicleCondition: 'used', isFinanced: true, brand: 'Fiat', model: 'Toro', modelYear: 2022, manufactureYear: 2022, value: 145000, status: 'Recusada', state: 'MG', fuel: 'diesel', transmission: 'automatic', color: 'Vinho', licensingLocation: 'MG', dateAdded: new Date(2023, 10, 12), version: 'Volcano', bodywork: 'Picape' },
+  { id: 'PROP-004', proposalType: 'financing', vehicleType: 'car', vehicleCondition: 'used', isFinanced: false, brand: 'Hyundai', model: 'Creta', modelYear: 2023, manufactureYear: 2023, value: 135000, status: 'Aprovada', state: 'SP', fuel: 'flex', transmission: 'automatic', color: 'Prata', licensingLocation: 'SP', dateAdded: new Date(2023, 10, 15), version: 'Ultimate', bodywork: 'SUV' },
+  { id: 'PROP-005', proposalType: 'financing', vehicleType: 'motorcycle', vehicleCondition: 'new', isFinanced: false, brand: 'Chevrolet', model: 'Onix', modelYear: 2024, manufactureYear: 2024, value: 95000, status: 'Em Análise', state: 'BA', fuel: 'flex', transmission: 'manual', color: 'Azul', licensingLocation: 'BA', dateAdded: new Date(2023, 10, 20), version: 'LTZ' },
 ];
 
 
@@ -98,7 +98,7 @@ export function ProposalList() {
                   {filteredProposals.length > 0 ? (
                       filteredProposals.map((proposal) => (
                           <TableRow key={proposal.id}>
-                              <TableCell>{format(proposal.dateAdded, 'dd/MM/yyyy')}</TableCell>
+                              <TableCell className="font-medium">{format(proposal.dateAdded, 'dd/MM/yyyy')}</TableCell>
                               <TableCell>
                                   <div className="font-medium">{proposal.brand}</div>
                                   <div className="text-sm text-muted-foreground">{proposal.model}</div>
