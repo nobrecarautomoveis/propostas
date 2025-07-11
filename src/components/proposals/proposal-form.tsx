@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const formSchema = z.object({
   proposalType: z.string({ required_error: "Selecione o tipo de proposta." }),
@@ -53,6 +53,7 @@ export type ProposalFormData = z.infer<typeof formSchema>;
 
 type ProposalFormProps = {
   onSubmit: (data: ProposalFormData) => void;
+  initialData?: ProposalFormData;
 };
 
 const brazilianStates = [
@@ -67,14 +68,14 @@ const brazilianStates = [
   { value: 'SP', label: 'São Paulo' }, { value: 'SE', label: 'Sergipe' }, { value: 'TO', label: 'Tocantins' }
 ];
 
-export function ProposalForm({ onSubmit }: ProposalFormProps) {
+export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currencyValue, setCurrencyValue] = useState('');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       isFinanced: false,
       status: 'Em Análise',
       plate: '',
@@ -82,16 +83,31 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
     },
   });
 
+  const formatCurrency = (value: number) => {
+     return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  }
+
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+      if(initialData.value) {
+        setCurrencyValue(formatCurrency(initialData.value));
+      }
+    }
+  }, [initialData, form]);
+
   async function handleFormSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    onSubmit(values); // Pass data to parent component
+    onSubmit(values);
     
     toast({
-      title: "Proposta Enviada!",
-      description: "Sua proposta foi criada com sucesso.",
+      title: `Proposta ${initialData ? 'Atualizada' : 'Enviada'}!`,
+      description: `Sua proposta foi ${initialData ? 'atualizada' : 'criada'} com sucesso.`,
     });
     
     setIsSubmitting(false);
@@ -108,11 +124,7 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
     const numericValue = parseFloat(rawValue) / 100;
     form.setValue('value', numericValue, { shouldValidate: true });
 
-    const formattedValue = new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(numericValue);
-
+    const formattedValue = formatCurrency(numericValue);
     setCurrencyValue(formattedValue);
   };
 
@@ -150,7 +162,7 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
             <FormItem className="flex flex-col pt-2">
                 <FormLabel className="mb-2">Veículo já financiado?</FormLabel>
                 <FormControl>
-                    <div className="flex h-10 items-center rounded-md border border-input px-3">
+                    <div className="flex h-10 items-center rounded-md border border-input bg-background px-3 py-2">
                         <span className="text-sm mr-auto">{field.value ? 'Sim' : 'Não'}</span>
                         <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </div>
@@ -246,7 +258,7 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
         <div className="flex justify-end pt-4">
             <Button type="submit" disabled={isSubmitting} size="lg">
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Enviar Proposta
+                {initialData ? 'Salvar Alterações' : 'Enviar Proposta'}
             </Button>
         </div>
       </form>
