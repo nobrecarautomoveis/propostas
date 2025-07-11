@@ -98,7 +98,7 @@ export function ProposalList() {
                   {filteredProposals.length > 0 ? (
                       filteredProposals.map((proposal) => (
                           <TableRow key={proposal.id}>
-                              <TableCell className="text-xs">{format(proposal.dateAdded, 'dd/MM/yyyy')}</TableCell>
+                              <TableCell>{format(proposal.dateAdded, 'dd/MM/yyyy')}</TableCell>
                               <TableCell>
                                   <div className="font-medium">{proposal.brand}</div>
                                   <div className="text-sm text-muted-foreground">{proposal.model}</div>
