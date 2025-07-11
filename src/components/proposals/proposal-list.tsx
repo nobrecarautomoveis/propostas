@@ -96,91 +96,106 @@ export function ProposalList() {
   return (
     <>
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { setIsDialogOpen(isOpen); if (!isOpen) setEditingProposal(null); }}>
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between gap-4">
-                <div>
-                    <CardTitle>Propostas</CardTitle>
-                    <CardDescription>
-                      Gerencie suas propostas de financiamento e refinanciamento.
-                    </CardDescription>
+        <AlertDialog open={!!proposalToDelete} onOpenChange={(isOpen) => !isOpen && setProposalToDelete(null)}>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between gap-4">
+                    <div>
+                        <CardTitle>Propostas</CardTitle>
+                        <CardDescription>
+                          Gerencie suas propostas de financiamento e refinanciamento.
+                        </CardDescription>
+                    </div>
+                    <Button onClick={handleNewClick}>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Nova Proposta
+                    </Button>
                 </div>
-                <Button onClick={handleNewClick}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Nova Proposta
-                </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <div className="flex items-center gap-2">
-                  <Input
-                    placeholder="Buscar por marca ou modelo..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="max-w-sm"
-                  />
-              </div>
-            </div>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Marca/Modelo</TableHead>
-                    <TableHead className="hidden md:table-cell">Ano</TableHead>
-                    <TableHead className="hidden md:table-cell">Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead><span className="sr-only">Ações</span></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {filteredProposals.length > 0 ? (
-                        filteredProposals.map((proposal) => (
-                            <TableRow key={proposal.id}>
-                                <TableCell className="font-medium">{format(proposal.dateAdded, 'dd/MM/yyyy')}</TableCell>
-                                <TableCell>
-                                    <div className="font-medium">{proposal.brand}</div>
-                                    <div className="text-sm text-muted-foreground">{proposal.model}</div>
-                                </TableCell>
-                                <TableCell className="hidden md:table-cell">{proposal.modelYear}</TableCell>
-                                <TableCell className="hidden md:table-cell">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(proposal.value)}</TableCell>
-                                <TableCell><Badge variant={statusVariant[proposal.status] || 'outline'}>{proposal.status}</Badge></TableCell>
-                                <TableCell>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => handleEditClick(proposal)}>Editar</DropdownMenuItem>
-                                            <AlertDialogTrigger asChild>
-                                                <DropdownMenuItem 
-                                                    className="text-destructive focus:bg-destructive/90 focus:text-destructive-foreground"
-                                                    onSelect={(e) => e.preventDefault()}
-                                                    onClick={() => handleDeleteClick(proposal)}
-                                                >
-                                                    Excluir
-                                                </DropdownMenuItem>
-                                            </AlertDialogTrigger>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="Buscar por marca ou modelo..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="max-w-sm"
+                      />
+                  </div>
+                </div>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Marca/Modelo</TableHead>
+                        <TableHead className="hidden md:table-cell">Ano</TableHead>
+                        <TableHead className="hidden md:table-cell">Valor</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead><span className="sr-only">Ações</span></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredProposals.length > 0 ? (
+                            filteredProposals.map((proposal) => (
+                                <TableRow key={proposal.id}>
+                                    <TableCell className="font-medium">{format(proposal.dateAdded, 'dd/MM/yyyy')}</TableCell>
+                                    <TableCell>
+                                        <div className="font-medium">{proposal.brand}</div>
+                                        <div className="text-sm text-muted-foreground">{proposal.model}</div>
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell">{proposal.modelYear}</TableCell>
+                                    <TableCell className="hidden md:table-cell">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(proposal.value)}</TableCell>
+                                    <TableCell><Badge variant={statusVariant[proposal.status] || 'outline'}>{proposal.status}</Badge></TableCell>
+                                    <TableCell>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => handleEditClick(proposal)}>Editar</DropdownMenuItem>
+                                                <AlertDialogTrigger asChild>
+                                                    <DropdownMenuItem 
+                                                        className="text-destructive focus:bg-destructive/90 focus:text-destructive-foreground"
+                                                        onSelect={(e) => e.preventDefault()}
+                                                        onClick={() => handleDeleteClick(proposal)}
+                                                    >
+                                                        Excluir
+                                                    </DropdownMenuItem>
+                                                </AlertDialogTrigger>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={6} className="h-24 text-center">
+                                    Nenhuma proposta encontrada.
                                 </TableCell>
                             </TableRow>
-                        ))
-                    ) : (
-                        <TableRow>
-                            <TableCell colSpan={6} className="h-24 text-center">
-                                Nenhuma proposta encontrada.
-                            </TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                        )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Essa ação não pode ser desfeita. Isso excluirá permanentemente a proposta
+                    <span className="font-bold"> {proposalToDelete?.id}</span>.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteConfirm}>Continuar</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle>{editingProposal ? 'Editar Proposta' : 'Nova Proposta de Veículo'}</DialogTitle>
@@ -189,22 +204,6 @@ export function ProposalList() {
             <ProposalForm onSubmit={handleFormSubmit} initialData={editingProposal || undefined} />
         </DialogContent>
       </Dialog>
-      
-      <AlertDialog open={!!proposalToDelete} onOpenChange={(isOpen) => !isOpen && setProposalToDelete(null)}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-            <AlertDialogDescription>
-                Essa ação não pode ser desfeita. Isso excluirá permanentemente a proposta
-                <span className="font-bold"> {proposalToDelete?.id}</span>.
-            </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>Continuar</AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
