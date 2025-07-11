@@ -43,6 +43,7 @@ type ProposalFormProps = {
 export function ProposalForm({ onSubmit }: ProposalFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currencyValue, setCurrencyValue] = useState('');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -66,6 +67,26 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
     
     setIsSubmitting(false);
   }
+
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    if (!rawValue) {
+      setCurrencyValue('');
+      form.setValue('value', 0);
+      return;
+    }
+
+    const numericValue = parseFloat(rawValue) / 100;
+    form.setValue('value', numericValue, { shouldValidate: true });
+
+    const formattedValue = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(numericValue);
+
+    setCurrencyValue(formattedValue);
+  };
+
 
   return (
     <Form {...form}>
@@ -93,14 +114,14 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
               </FormItem>
           )}/>
            <FormField control={form.control} name="isFinanced" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Veículo já financiado?</FormLabel>
-                  <FormControl>
-                    <div className="flex h-10 items-center">
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </div>
-                  </FormControl>
-                </FormItem>
+              <FormItem className="flex flex-col">
+                <FormLabel>Veículo já financiado?</FormLabel>
+                <FormControl>
+                  <div className="flex h-10 items-center">
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </div>
+                </FormControl>
+              </FormItem>
             )}/>
 
           {/* Row 2 */}
@@ -148,7 +169,20 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
           )}/>
           
           {/* Row 5 */}
-          <FormField control={form.control} name="value" render={({ field }) => (<FormItem><FormLabel>Valor do Veículo (R$)</FormLabel><FormControl><Input type="number" placeholder="130000" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+          <FormField control={form.control} name="value" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Valor do Veículo</FormLabel>
+              <FormControl>
+                <Input
+                  type="text"
+                  placeholder="R$ 0,00"
+                  value={currencyValue}
+                  onChange={handleCurrencyChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}/>
           <FormField control={form.control} name="licensingLocation" render={({ field }) => (<FormItem><FormLabel>Local de Licenciamento</FormLabel><FormControl><Input placeholder="Ex: São Paulo, SP" {...field} /></FormControl><FormMessage /></FormItem>)}/>
            <FormField control={form.control} name="status" render={({ field }) => (
               <FormItem>
