@@ -146,7 +146,7 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
                   <FormMessage />
               </FormItem>
           )}/>
-          <FormField control={form.control} name="isFinanced" render={({ field }) => (
+           <FormField control={form.control} name="isFinanced" render={({ field }) => (
             <FormItem className="flex flex-col pt-2">
                 <FormLabel className="mb-2">Veículo já financiado?</FormLabel>
                 <FormControl>
