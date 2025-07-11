@@ -29,7 +29,7 @@ const formSchema = z.object({
   transmission: z.string({ required_error: "Selecione a transmissão." }),
   color: z.string().min(2, "Mínimo 2 caracteres."),
   value: z.coerce.number().positive("O valor deve ser positivo."),
-  licensingLocation: z.string().min(2, "Mínimo 2 caracteres."),
+  licensingLocation: z.string({ required_error: "Selecione o estado." }),
   status: z.enum(['Em Análise', 'Aprovada', 'Recusada'], { required_error: "Selecione o status da proposta." }),
   state: z.string().optional(), // Adding state to schema
 });
@@ -39,6 +39,18 @@ export type ProposalFormData = z.infer<typeof formSchema>;
 type ProposalFormProps = {
   onSubmit: (data: ProposalFormData) => void;
 };
+
+const brazilianStates = [
+  { value: 'AC', label: 'Acre' }, { value: 'AL', label: 'Alagoas' }, { value: 'AP', label: 'Amapá' },
+  { value: 'AM', label: 'Amazonas' }, { value: 'BA', label: 'Bahia' }, { value: 'CE', label: 'Ceará' },
+  { value: 'DF', label: 'Distrito Federal' }, { value: 'ES', label: 'Espírito Santo' }, { value: 'GO', label: 'Goiás' },
+  { value: 'MA', label: 'Maranhão' }, { value: 'MT', label: 'Mato Grosso' }, { value: 'MS', label: 'Mato Grosso do Sul' },
+  { value: 'MG', label: 'Minas Gerais' }, { value: 'PA', label: 'Pará' }, { value: 'PB', label: 'Paraíba' },
+  { value: 'PR', label: 'Paraná' }, { value: 'PE', label: 'Pernambuco' }, { value: 'PI', label: 'Piauí' },
+  { value: 'RJ', label: 'Rio de Janeiro' }, { value: 'RN', label: 'Rio Grande do Norte' }, { value: 'RS', label: 'Rio Grande do Sul' },
+  { value: 'RO', label: 'Rondônia' }, { value: 'RR', label: 'Roraima' }, { value: 'SC', label: 'Santa Catarina' },
+  { value: 'SP', label: 'São Paulo' }, { value: 'SE', label: 'Sergipe' }, { value: 'TO', label: 'Tocantins' }
+];
 
 export function ProposalForm({ onSubmit }: ProposalFormProps) {
   const { toast } = useToast();
@@ -114,14 +126,14 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
               </FormItem>
           )}/>
            <FormField control={form.control} name="isFinanced" render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Veículo já financiado?</FormLabel>
-                <FormControl>
-                  <div className="flex h-10 items-center">
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </div>
-                </FormControl>
-              </FormItem>
+                <FormItem className="flex flex-col justify-center space-y-2">
+                    <FormLabel>Veículo já financiado?</FormLabel>
+                    <FormControl>
+                    <div className="flex h-10 items-center">
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </div>
+                    </FormControl>
+                </FormItem>
             )}/>
 
           {/* Row 2 */}
@@ -183,7 +195,20 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
               <FormMessage />
             </FormItem>
           )}/>
-          <FormField control={form.control} name="licensingLocation" render={({ field }) => (<FormItem><FormLabel>Local de Licenciamento</FormLabel><FormControl><Input placeholder="Ex: São Paulo, SP" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+          <FormField control={form.control} name="licensingLocation" render={({ field }) => (
+              <FormItem>
+                  <FormLabel>Local de Licenciamento</FormLabel>
+                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Selecione o estado..." /></SelectTrigger></FormControl>
+                       <SelectContent>
+                        {brazilianStates.map(state => (
+                          <SelectItem key={state.value} value={state.value}>{state.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                  </Select>
+                  <FormMessage />
+              </FormItem>
+          )}/>
            <FormField control={form.control} name="status" render={({ field }) => (
               <FormItem>
                   <FormLabel>Status</FormLabel>
