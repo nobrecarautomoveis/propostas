@@ -21,7 +21,7 @@ const formSchema = z.object({
   plate: z.string().optional(),
   brand: z.string({ required_error: "A marca é obrigatória." }).min(2, "Mínimo 2 caracteres."),
   model: z.string({ required_error: "O modelo é obrigatório." }).min(2, "Mínimo 2 caracteres."),
-  bodywork: z.string({ required_error: "A carroceria é obrigatória." }).min(2, "Mínimo 2 caracteres."),
+  bodywork: z.string().optional(),
   modelYear: z.coerce.number({ required_error: "O ano do modelo é obrigatório." }).min(1950, "Ano inválido.").max(new Date().getFullYear() + 1, "Ano inválido."),
   manufactureYear: z.coerce.number({ required_error: "O ano de fabricação é obrigatório." }).min(1950, "Ano inválido.").max(new Date().getFullYear(), "Ano inválido."),
   version: z.string({ required_error: "A versão é obrigatória." }).min(1, "A versão é obrigatória."),
@@ -38,6 +38,13 @@ const formSchema = z.object({
             code: z.ZodIssueCode.custom,
             path: ['plate'],
             message: 'A placa é obrigatória para veículos usados.',
+        });
+    }
+    if ((data.vehicleType === 'car' || data.vehicleType === 'truck') && (!data.bodywork || data.bodywork.trim() === '')) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['bodywork'],
+            message: 'A carroceria é obrigatória para carros e caminhões.',
         });
     }
 });
@@ -71,6 +78,7 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
       isFinanced: false,
       status: 'Em Análise',
       plate: '',
+      bodywork: '',
     },
   });
 
@@ -113,7 +121,6 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 pt-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
-          {/* Row 1 */}
           <FormField control={form.control} name="proposalType" render={({ field }) => (
               <FormItem>
                   <FormLabel>Tipo de Proposta</FormLabel>
@@ -139,18 +146,18 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
                   <FormMessage />
               </FormItem>
           )}/>
-           <FormField control={form.control} name="isFinanced" render={({ field }) => (
-                <FormItem className="flex flex-col pt-2">
-                    <FormLabel className="mb-2">Veículo já financiado?</FormLabel>
-                    <FormControl>
+          <FormField control={form.control} name="isFinanced" render={({ field }) => (
+            <FormItem className="flex flex-col pt-2">
+                <FormLabel className="mb-2">Veículo já financiado?</FormLabel>
+                <FormControl>
                     <div className="flex h-10 items-center rounded-md border border-input px-3">
+                        <span className="text-sm mr-auto">{field.value ? 'Sim' : 'Não'}</span>
                         <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </div>
-                    </FormControl>
-                </FormItem>
-            )}/>
-
-          {/* Row 2 */}
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+          )}/>
           <FormField control={form.control} name="vehicleCondition" render={({ field }) => (
               <FormItem className="space-y-3 pt-2">
                   <FormLabel>Condição do Veículo</FormLabel>
@@ -165,18 +172,12 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
           )}/>
           <FormField control={form.control} name="plate" render={({ field }) => (<FormItem><FormLabel>Placa</FormLabel><FormControl><Input placeholder="ABC-1234" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="brand" render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input placeholder="Ex: Volkswagen" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-          
-          {/* Row 3 */}
           <FormField control={form.control} name="model" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input placeholder="Ex: Nivus" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="bodywork" render={({ field }) => (<FormItem><FormLabel>Carroceria</FormLabel><FormControl><Input placeholder="Ex: SUV" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="version" render={({ field }) => (<FormItem><FormLabel>Versão</FormLabel><FormControl><Input placeholder="Ex: Highline" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-
-          {/* Row 4 */}
           <FormField control={form.control} name="modelYear" render={({ field }) => (<FormItem><FormLabel>Ano Modelo</FormLabel><FormControl><Input type="number" placeholder="2024" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="manufactureYear" render={({ field }) => (<FormItem><FormLabel>Ano Fabricação</FormLabel><FormControl><Input type="number" placeholder="2023" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="color" render={({ field }) => (<FormItem><FormLabel>Cor</FormLabel><FormControl><Input placeholder="Ex: Branco" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-          
-          {/* Row 5 */}
           <FormField control={form.control} name="fuel" render={({ field }) => (
               <FormItem>
                   <FormLabel>Combustível</FormLabel>
@@ -211,8 +212,6 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
               <FormMessage />
             </FormItem>
           )}/>
-
-          {/* Row 6 */}
           <FormField control={form.control} name="licensingLocation" render={({ field }) => (
               <FormItem>
                   <FormLabel>Local de Licenciamento</FormLabel>
