@@ -66,8 +66,8 @@ export function ProposalForm({ onFinished }: ProposalFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pt-4">
-        <div className="grid md:grid-cols-2 gap-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
+        <div className="grid md:grid-cols-2 gap-x-8 gap-y-6">
             <FormField control={form.control} name="proposalType" render={({ field }) => (
                 <FormItem>
                     <FormLabel>Tipo de Proposta</FormLabel>
@@ -88,8 +88,7 @@ export function ProposalForm({ onFinished }: ProposalFormProps) {
                     <FormMessage />
                 </FormItem>
             )}/>
-        </div>
-        <div className="grid md:grid-cols-2 gap-8 items-center">
+        
              <FormField control={form.control} name="vehicleCondition" render={({ field }) => (
                 <FormItem className="space-y-3">
                     <FormLabel>Condição do Veículo</FormLabel>
@@ -108,19 +107,16 @@ export function ProposalForm({ onFinished }: ProposalFormProps) {
                     <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 </FormItem>
             )}/>
-        </div>
-        <div className="grid md:grid-cols-2 gap-8">
+        
             <FormField control={form.control} name="plate" render={({ field }) => (<FormItem><FormLabel>Placa (Opcional)</FormLabel><FormControl><Input placeholder="ABC-1234" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-        </div>
-         <div className="grid md:grid-cols-2 gap-8">
+            <div />
+
             <FormField control={form.control} name="brand" render={({ field }) => (<FormItem><FormLabel>Marca</FormLabel><FormControl><Input placeholder="Ex: Volkswagen" {...field} /></FormControl><FormMessage /></FormItem>)}/>
             <FormField control={form.control} name="model" render={({ field }) => (<FormItem><FormLabel>Modelo</FormLabel><FormControl><Input placeholder="Ex: Nivus" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-        </div>
-        <div className="grid md:grid-cols-2 gap-8">
+
              <FormField control={form.control} name="modelYear" render={({ field }) => (<FormItem><FormLabel>Ano Modelo</FormLabel><FormControl><Input type="number" placeholder="2024" {...field} /></FormControl><FormMessage /></FormItem>)}/>
              <FormField control={form.control} name="manufactureYear" render={({ field }) => (<FormItem><FormLabel>Ano Fabricação</FormLabel><FormControl><Input type="number" placeholder="2023" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-        </div>
-         <div className="grid md:grid-cols-2 gap-8">
+        
             <FormField control={form.control} name="fuel" render={({ field }) => (
                 <FormItem>
                     <FormLabel>Combustível</FormLabel>
@@ -141,16 +137,14 @@ export function ProposalForm({ onFinished }: ProposalFormProps) {
                     <FormMessage />
                 </FormItem>
             )}/>
-        </div>
-        <div className="grid md:grid-cols-2 gap-8">
+
             <FormField control={form.control} name="color" render={({ field }) => (<FormItem><FormLabel>Cor</FormLabel><FormControl><Input placeholder="Ex: Branco" {...field} /></FormControl><FormMessage /></FormItem>)}/>
             <FormField control={form.control} name="value" render={({ field }) => (<FormItem><FormLabel>Valor do Veículo (R$)</FormLabel><FormControl><Input type="number" placeholder="130000" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-        </div>
-         <div className="grid md:grid-cols-2 gap-8">
+        
             <FormField control={form.control} name="licensingLocation" render={({ field }) => (<FormItem><FormLabel>Local de Licenciamento</FormLabel><FormControl><Input placeholder="Ex: São Paulo, SP" {...field} /></FormControl><FormMessage /></FormItem>)}/>
         </div>
 
-        <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto">
+        <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto mt-8">
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Enviar Proposta
         </Button>
