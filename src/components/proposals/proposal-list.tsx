@@ -14,7 +14,6 @@ import { format } from 'date-fns';
 
 type Proposal = ProposalFormData & {
   id: string;
-  status: 'Em Análise' | 'Aprovada' | 'Recusada';
   dateAdded: Date;
 };
 
@@ -42,7 +41,6 @@ export function ProposalList() {
         const newProposal: Proposal = {
             ...data,
             id: `PROP-${String(proposals.length + 1).padStart(3, '0')}`,
-            status: 'Em Análise',
             dateAdded: new Date(),
         };
         setProposals(prev => [newProposal, ...prev]);

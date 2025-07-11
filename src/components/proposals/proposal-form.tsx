@@ -30,6 +30,7 @@ const formSchema = z.object({
   color: z.string().min(2, "Mínimo 2 caracteres."),
   value: z.coerce.number().positive("O valor deve ser positivo."),
   licensingLocation: z.string().min(2, "Mínimo 2 caracteres."),
+  status: z.enum(['Em Análise', 'Aprovada', 'Recusada'], { required_error: "Selecione o status da proposta." }),
   state: z.string().optional(), // Adding state to schema
 });
 
@@ -47,6 +48,7 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       isFinanced: false,
+      status: 'Em Análise',
     },
   });
 
@@ -91,13 +93,15 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
               </FormItem>
           )}/>
            <FormField control={form.control} name="isFinanced" render={({ field }) => (
-              <FormItem>
+                <FormItem>
                   <FormLabel>Veículo já financiado?</FormLabel>
-                  <div className="flex items-center h-10 rounded-md border border-input bg-background px-3 py-2">
-                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                  </div>
-              </FormItem>
-          )}/>
+                  <FormControl>
+                    <div className="flex h-10 items-center">
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </div>
+                  </FormControl>
+                </FormItem>
+            )}/>
 
           {/* Row 2 */}
           <FormField control={form.control} name="vehicleCondition" render={({ field }) => (
@@ -146,6 +150,20 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
           {/* Row 5 */}
           <FormField control={form.control} name="value" render={({ field }) => (<FormItem><FormLabel>Valor do Veículo (R$)</FormLabel><FormControl><Input type="number" placeholder="130000" {...field} /></FormControl><FormMessage /></FormItem>)}/>
           <FormField control={form.control} name="licensingLocation" render={({ field }) => (<FormItem><FormLabel>Local de Licenciamento</FormLabel><FormControl><Input placeholder="Ex: São Paulo, SP" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+           <FormField control={form.control} name="status" render={({ field }) => (
+              <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="Em Análise">Em Análise</SelectItem>
+                        <SelectItem value="Aprovada">Aprovada</SelectItem>
+                        <SelectItem value="Recusada">Recusada</SelectItem>
+                      </SelectContent>
+                  </Select>
+                  <FormMessage />
+              </FormItem>
+          )}/>
 
         </div>
 
