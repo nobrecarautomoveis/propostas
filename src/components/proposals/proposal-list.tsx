@@ -119,7 +119,7 @@ export function ProposalList() {
                         placeholder="Buscar por marca ou modelo..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="max-w-sm"
+                        className="max-w-md"
                       />
                   </div>
                 </div>
