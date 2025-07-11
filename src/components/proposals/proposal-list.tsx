@@ -90,7 +90,8 @@ export function ProposalList() {
 
     const filteredProposals = proposals.filter(p => 
         p.brand.toLowerCase().includes(search.toLowerCase()) ||
-        p.model.toLowerCase().includes(search.toLowerCase())
+        p.model.toLowerCase().includes(search.toLowerCase()) ||
+        p.id.toLowerCase().includes(search.toLowerCase())
     );
 
   return (
@@ -116,7 +117,7 @@ export function ProposalList() {
                 <div className="flex items-center justify-between gap-4 mb-4">
                   <div className="flex items-center gap-2">
                       <Input
-                        placeholder="Buscar por marca ou modelo..."
+                        placeholder="Buscar por marca, modelo ou nº da proposta..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-[300px]"
@@ -127,6 +128,7 @@ export function ProposalList() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-[150px]">Nº da Proposta</TableHead>
                         <TableHead>Data</TableHead>
                         <TableHead>Marca/Modelo</TableHead>
                         <TableHead className="hidden md:table-cell">Ano</TableHead>
@@ -139,6 +141,7 @@ export function ProposalList() {
                         {filteredProposals.length > 0 ? (
                             filteredProposals.map((proposal) => (
                                 <TableRow key={proposal.id}>
+                                    <TableCell className="font-medium">{proposal.id}</TableCell>
                                     <TableCell className="font-medium">{format(proposal.dateAdded, 'dd/MM/yyyy')}</TableCell>
                                     <TableCell>
                                         <div className="font-medium">{proposal.brand}</div>
@@ -172,7 +175,7 @@ export function ProposalList() {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center">
+                                <TableCell colSpan={7} className="h-24 text-center">
                                     Nenhuma proposta encontrada.
                                 </TableCell>
                             </TableRow>
