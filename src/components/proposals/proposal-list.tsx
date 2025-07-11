@@ -88,7 +88,7 @@ export function ProposalList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[120px]">Data</TableHead>
+                  <TableHead>Data</TableHead>
                   <TableHead>Marca/Modelo</TableHead>
                   <TableHead className="hidden md:table-cell">Ano</TableHead>
                   <TableHead className="hidden md:table-cell">Valor</TableHead>
