@@ -91,9 +91,11 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
               </FormItem>
           )}/>
            <FormField control={form.control} name="isFinanced" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm h-16">
-                  <div className="space-y-0.5"><FormLabel>Veículo já financiado?</FormLabel></div>
-                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+              <FormItem>
+                  <FormLabel>Veículo já financiado?</FormLabel>
+                  <div className="flex items-center h-10 rounded-md border border-input bg-background px-3 py-2">
+                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                  </div>
               </FormItem>
           )}/>
 
