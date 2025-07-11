@@ -88,8 +88,8 @@ export function ProposalList() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[120px]">Data</TableHead>
                   <TableHead>Marca/Modelo</TableHead>
-                  <TableHead className="hidden sm:table-cell">Data</TableHead>
                   <TableHead className="hidden md:table-cell">Ano</TableHead>
                   <TableHead className="hidden md:table-cell">Valor</TableHead>
                   <TableHead>Status</TableHead>
@@ -100,11 +100,11 @@ export function ProposalList() {
                   {filteredProposals.length > 0 ? (
                       filteredProposals.map((proposal) => (
                           <TableRow key={proposal.id}>
+                              <TableCell>{format(proposal.dateAdded, 'dd/MM/yyyy')}</TableCell>
                               <TableCell>
                                   <div className="font-medium">{proposal.brand}</div>
                                   <div className="text-sm text-muted-foreground">{proposal.model}</div>
                               </TableCell>
-                              <TableCell className="hidden sm:table-cell">{format(proposal.dateAdded, 'dd/MM/yyyy')}</TableCell>
                               <TableCell className="hidden md:table-cell">{proposal.modelYear}</TableCell>
                               <TableCell className="hidden md:table-cell">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(proposal.value)}</TableCell>
                               <TableCell><Badge variant={statusVariant[proposal.status] || 'outline'}>{proposal.status}</Badge></TableCell>
