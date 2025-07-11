@@ -129,16 +129,21 @@ export function ProposalForm({ onSubmit }: ProposalFormProps) {
                   <FormLabel>Tipo de Veículo</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
-                      <SelectContent><SelectItem value="car">Carro</SelectItem><SelectItem value="motorcycle">Moto</SelectItem></SelectContent>
+                      <SelectContent>
+                          <SelectItem value="car">Carro</SelectItem>
+                          <SelectItem value="motorcycle">Moto</SelectItem>
+                          <SelectItem value="bus">Ônibus</SelectItem>
+                          <SelectItem value="truck">Caminhão</SelectItem>
+                      </SelectContent>
                   </Select>
                   <FormMessage />
               </FormItem>
           )}/>
            <FormField control={form.control} name="isFinanced" render={({ field }) => (
-                <FormItem className="flex flex-col space-y-2 pt-1">
-                    <FormLabel>Veículo já financiado?</FormLabel>
+                <FormItem className="flex flex-col pt-2">
+                    <FormLabel className="mb-2">Veículo já financiado?</FormLabel>
                     <FormControl>
-                    <div className="flex h-10 items-center">
+                    <div className="flex h-10 items-center rounded-md border border-input px-3">
                         <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </div>
                     </FormControl>
