@@ -1,5 +1,8 @@
-# Firebase Studio
+# Sistema de Propostas Nobrecar
 
-This is a NextJS starter in Firebase Studio.
+Sistema de gerenciamento de propostas desenvolvido com Next.js e Convex.
+
+To get started, take a look at src/app/page.tsx.
+
 
 To get started, take a look at src/app/page.tsx.

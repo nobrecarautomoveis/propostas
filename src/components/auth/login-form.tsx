@@ -16,15 +16,20 @@ import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useMutation, useAction } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
-  password: z.string().min(6, { message: 'A senha deve ter pelo menos 6 caracteres.' }),
+  password: z.string().min(1, { message: 'A senha não pode estar em branco.' }),
 });
 
 export function LoginForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const login = useAction(api.users.login);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -36,10 +41,28 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    // On success, redirect to proposals
-    router.push('/propostas');
+    try {
+      const result = await login(values);
+      if (result.userId) {
+        // Salva no localStorage
+        window.localStorage.setItem('userId', result.userId);
+        
+        // Salva no cookie com configurações de segurança
+        const cookieValue = `userId=${result.userId}; path=/; max-age=86400; secure=${window.location.protocol === 'https:'}; samesite=strict`;
+        document.cookie = cookieValue;
+        
+        console.log('🍪 Cookie definido:', cookieValue);
+        
+        // Força reload da página para garantir que o middleware funcione
+        window.location.href = '/propostas';
+      } else {
+        toast({ title: 'Erro de Login', description: 'ID de usuário não retornado.', variant: 'destructive' });
+      }
+    } catch (error: any) {
+      toast({ title: 'Erro de Login', description: error.message || 'Ocorreu um erro.', variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (

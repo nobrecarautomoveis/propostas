@@ -7,7 +7,13 @@ export default function LoginPage() {
     <main className="flex min-h-screen w-full items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center items-center">
-          <Image src="/logo.png" alt="Nobrecar Automóveis Logo" width={250} height={80} />
+          <Image 
+            src="/logo.png" 
+            alt="Nobrecar Automóveis Logo" 
+            width={250} 
+            height={80} 
+            priority
+          />
           <CardTitle className="text-2xl font-bold tracking-tight pt-4">Acesse sua conta</CardTitle>
           <CardDescription>
             Digite seu e-mail e senha para entrar.

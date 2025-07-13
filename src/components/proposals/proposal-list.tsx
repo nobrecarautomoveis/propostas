@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -13,53 +14,81 @@ import { ProposalForm, ProposalFormData } from './proposal-form';
 import { format } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { useCurrentUser } from '@/hooks/use-current-user';
+import { Id } from '../../../convex/_generated/dataModel';
 
 type Proposal = ProposalFormData & {
-  id: string;
-  dateAdded: Date;
+  _id: Id<"proposals">;
+  proposalNumber: string;
+  dateAdded: string;
 };
 
-const initialProposals: Proposal[] = [
-  { id: 'PROP-001', proposalType: 'financing', vehicleType: 'car', vehicleCondition: 'used', isFinanced: false, brand: 'Volkswagen', model: 'Nivus', modelYear: 2023, manufactureYear: 2023, value: 130000, status: 'Em Análise', state: 'SP', fuel: 'flex', transmission: 'automatic', color: 'Branco', licensingLocation: 'SP', dateAdded: new Date(2023, 10, 5), version: 'Highline', bodywork: 'SUV', plate: 'ABC-1234' },
-  { id: 'PROP-002', proposalType: 'financing', vehicleType: 'car', vehicleCondition: 'new', isFinanced: false, brand: 'Honda', model: 'Civic', modelYear: 2024, manufactureYear: 2024, value: 160000, status: 'Aprovada', state: 'RJ', fuel: 'flex', transmission: 'automatic', color: 'Preto', licensingLocation: 'RJ', dateAdded: new Date(2023, 10, 8), version: 'Touring', bodywork: 'Sedan' },
-  { id: 'PROP-003', proposalType: 'refinancing', vehicleType: 'car', vehicleCondition: 'used', isFinanced: true, brand: 'Fiat', model: 'Toro', modelYear: 2022, manufactureYear: 2022, value: 145000, status: 'Recusada', state: 'MG', fuel: 'diesel', transmission: 'automatic', color: 'Vinho', licensingLocation: 'MG', dateAdded: new Date(2023, 10, 12), version: 'Volcano', bodywork: 'Picape', plate: 'DEF-5678' },
-  { id: 'PROP-004', proposalType: 'financing', vehicleType: 'car', vehicleCondition: 'used', isFinanced: false, brand: 'Hyundai', model: 'Creta', modelYear: 2023, manufactureYear: 2023, value: 135000, status: 'Aprovada', state: 'SP', fuel: 'flex', transmission: 'automatic', color: 'Prata', licensingLocation: 'SP', dateAdded: new Date(2023, 10, 15), version: 'Ultimate', bodywork: 'SUV', plate: 'GHI-9012' },
-  { id: 'PROP-005', proposalType: 'financing', vehicleType: 'motorcycle', vehicleCondition: 'new', isFinanced: false, brand: 'Chevrolet', model: 'Onix', modelYear: 2024, manufactureYear: 2024, value: 95000, status: 'Em Análise', state: 'BA', fuel: 'flex', transmission: 'manual', color: 'Azul', licensingLocation: 'BA', dateAdded: new Date(2023, 10, 20), version: 'LTZ' },
-];
-
-
-const statusVariant: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
-  'Aprovada': 'default',
-  'Em Análise': 'secondary',
-  'Recusada': 'destructive',
+// Mapeamento de status para variantes de badge
+const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  "Em Análise": "secondary",
+  "Aprovada": "default",
+  "Recusada": "destructive"
 };
 
 export function ProposalList() {
     const { toast } = useToast();
+    const { currentUser } = useCurrentUser();
     const [search, setSearch] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState<string>('all');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [proposals, setProposals] = useState<Proposal[]>(initialProposals);
     const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
     const [proposalToDelete, setProposalToDelete] = useState<Proposal | null>(null);
 
-    const handleFormSubmit = (data: ProposalFormData) => {
-        if (editingProposal) {
-            // Update existing proposal
-            const updatedProposals = proposals.map(p => 
-                p.id === editingProposal.id ? { ...editingProposal, ...data } : p
-            );
-            setProposals(updatedProposals);
-        } else {
-            // Add new proposal
-            const newProposal: Proposal = {
-                ...data,
-                id: `PROP-${String(proposals.length + 1).padStart(3, '0')}`,
-                dateAdded: new Date(),
-            };
-            setProposals(prev => [newProposal, ...prev]);
+    // Consulta as propostas do backend
+    const proposals = useQuery(
+      api.proposals.getProposals, 
+      { userId: currentUser?._id || null },
+      { enabled: !!currentUser?._id } // Só executa se houver usuário autenticado
+    );
+
+    // Mutations para criar, atualizar e excluir propostas
+    const createProposalMutation = useMutation(api.proposals.createProposal);
+    const updateProposalMutation = useMutation(api.proposals.updateProposal);
+    const deleteProposalMutation = useMutation(api.proposals.deleteProposal);
+
+    const handleFormSubmit = async (data: ProposalFormData) => {
+        try {
+            if (editingProposal) {
+                // Atualiza proposta existente
+                await updateProposalMutation({
+                    proposalId: editingProposal._id,
+                    userId: currentUser?._id as Id<"users">,
+                    ...data
+                });
+                
+                toast({
+                    title: "Proposta Atualizada",
+                    description: "A proposta foi atualizada com sucesso."
+                });
+            } else {
+                // Cria nova proposta
+                await createProposalMutation({
+                    ...data,
+                    userId: currentUser?._id as Id<"users">
+                });
+                
+                toast({
+                    title: "Proposta Criada",
+                    description: "A proposta foi criada com sucesso."
+                });
+            }
+            
+            setIsDialogOpen(false);
+            setEditingProposal(null);
+        } catch (error) {
+            toast({
+                title: "Erro",
+                description: error instanceof Error ? error.message : "Ocorreu um erro ao processar a proposta.",
+                variant: "destructive"
+            });
         }
-        setIsDialogOpen(false);
-        setEditingProposal(null);
     };
 
     const handleEditClick = (proposal: Proposal) => {
@@ -76,23 +105,73 @@ export function ProposalList() {
         setProposalToDelete(proposal);
     };
 
-    const handleDeleteConfirm = () => {
-        if (proposalToDelete) {
-            setProposals(proposals.filter(p => p.id !== proposalToDelete.id));
-            toast({
-                title: "Proposta Excluída",
-                description: `A proposta ${proposalToDelete.id} foi removida com sucesso.`,
-                variant: 'destructive'
-            })
-            setProposalToDelete(null);
+    const handleDeleteConfirm = async () => {
+        if (proposalToDelete && currentUser) {
+            try {
+                await deleteProposalMutation({
+                    proposalId: proposalToDelete._id,
+                    userId: currentUser._id
+                });
+                
+                toast({
+                    title: "Proposta Excluída",
+                    description: `A proposta ${proposalToDelete.proposalNumber} foi removida com sucesso.`,
+                    variant: 'destructive'
+                });
+                
+                setProposalToDelete(null);
+            } catch (error) {
+                toast({
+                    title: "Erro",
+                    description: error instanceof Error ? error.message : "Ocorreu um erro ao excluir a proposta.",
+                    variant: "destructive"
+                });
+            }
         }
     };
 
-    const filteredProposals = proposals.filter(p => 
-        p.brand.toLowerCase().includes(search.toLowerCase()) ||
-        p.model.toLowerCase().includes(search.toLowerCase()) ||
-        p.id.toLowerCase().includes(search.toLowerCase())
-    );
+    // Gera lista de meses para o seletor
+    const getMonthOptions = () => {
+        const months = [
+            { value: 'all', label: 'Todos os meses' },
+            { value: '01', label: 'Janeiro' },
+            { value: '02', label: 'Fevereiro' },
+            { value: '03', label: 'Março' },
+            { value: '04', label: 'Abril' },
+            { value: '05', label: 'Maio' },
+            { value: '06', label: 'Junho' },
+            { value: '07', label: 'Julho' },
+            { value: '08', label: 'Agosto' },
+            { value: '09', label: 'Setembro' },
+            { value: '10', label: 'Outubro' },
+            { value: '11', label: 'Novembro' },
+            { value: '12', label: 'Dezembro' }
+        ];
+        return months;
+    };
+
+    // Filtra as propostas com base na pesquisa e mês selecionado
+    const filteredProposals = proposals?.filter(p => {
+        const searchTerm = search.toLowerCase();
+        const brandMatch = (p.brandName && p.brandName.toLowerCase().includes(searchTerm)) || 
+                         (p.brand && p.brand.toLowerCase().includes(searchTerm));
+        const modelMatch = (p.modelName && p.modelName.toLowerCase().includes(searchTerm)) || 
+                         (p.model && p.model.toLowerCase().includes(searchTerm));
+        const proposalNumberMatch = p.proposalNumber.toLowerCase().includes(searchTerm);
+        
+        const searchMatch = brandMatch || modelMatch || proposalNumberMatch;
+        
+        // Filtro por mês
+        if (selectedMonth === 'all') {
+            return searchMatch;
+        }
+        
+        const proposalDate = new Date(p.dateAdded);
+        const proposalMonth = format(proposalDate, 'MM');
+        const monthMatch = proposalMonth === selectedMonth;
+        
+        return searchMatch && monthMatch;
+    }) || [];
 
   return (
     <>
@@ -122,6 +201,18 @@ export function ProposalList() {
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-[300px]"
                       />
+                      <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Selecionar mês" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getMonthOptions().map((month) => (
+                            <SelectItem key={month.value} value={month.value}>
+                              {month.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                   </div>
                 </div>
                 <div className="rounded-md border">
@@ -130,6 +221,7 @@ export function ProposalList() {
                       <TableRow>
                         <TableHead className="w-[150px]">Nº da Proposta</TableHead>
                         <TableHead>Data</TableHead>
+                        <TableHead>Tipo de Proposta</TableHead>
                         <TableHead>Marca/Modelo</TableHead>
                         <TableHead className="hidden md:table-cell">Ano</TableHead>
                         <TableHead className="hidden md:table-cell">Valor</TableHead>
@@ -140,14 +232,14 @@ export function ProposalList() {
                     <TableBody>
                         {filteredProposals.length > 0 ? (
                             filteredProposals.map((proposal) => (
-                                <TableRow key={proposal.id}>
-                                    <TableCell className="font-medium">{proposal.id}</TableCell>
-                                    <TableCell className="font-medium">{format(proposal.dateAdded, 'dd/MM/yyyy')}</TableCell>
+                                <TableRow key={proposal._id}>
+                                    <TableCell className="font-medium">{proposal.proposalNumber}</TableCell>
+                                    <TableCell className="font-medium">{format(new Date(proposal.dateAdded), 'dd/MM/yyyy')}</TableCell>
+                                    <TableCell>{proposal.proposalType === 'financing' ? 'Financiamento' : 'Refinanciamento'}</TableCell>
                                     <TableCell>
-                                        <div className="font-medium">{proposal.brand}</div>
-                                        <div className="text-sm text-muted-foreground">{proposal.model}</div>
+                                        <div className="font-medium">{proposal.brandName || proposal.brand} / {proposal.modelName || proposal.model}</div>
                                     </TableCell>
-                                    <TableCell className="hidden md:table-cell">{proposal.modelYear}</TableCell>
+                                    <TableCell className="hidden md:table-cell">{typeof proposal.modelYear === 'string' && proposal.modelYear.includes('-') ? proposal.modelYear.split('-')[0] : proposal.modelYear}</TableCell>
                                     <TableCell className="hidden md:table-cell">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(proposal.value)}</TableCell>
                                     <TableCell><Badge variant={statusVariant[proposal.status] || 'outline'}>{proposal.status}</Badge></TableCell>
                                     <TableCell>
@@ -175,7 +267,7 @@ export function ProposalList() {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">
+                                <TableCell colSpan={8} className="h-24 text-center">
                                     Nenhuma proposta encontrada.
                                 </TableCell>
                             </TableRow>
