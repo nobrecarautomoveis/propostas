@@ -28,7 +28,7 @@ const formSchema = z.object({
 export function LoginForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const login = useAction(api.users.login);
+  const login = useAction(api.userActions.login); // Corrigido: userActions em vez de users
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
