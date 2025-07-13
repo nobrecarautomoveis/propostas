@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as migration from "../migration.js";
 import type * as proposals from "../proposals.js";
+import type * as userActions from "../userActions.js";
 import type * as users from "../users.js";
 
 /**
@@ -28,6 +29,7 @@ import type * as users from "../users.js";
 declare const fullApi: ApiFromModules<{
   migration: typeof migration;
   proposals: typeof proposals;
+  userActions: typeof userActions;
   users: typeof users;
 }>;
 export declare const api: FilterApi<
