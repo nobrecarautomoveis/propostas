@@ -195,21 +195,31 @@ export const login = action({
     password: v.string(),
   },
   handler: async (ctx, args) => {
-    // Buscar usuário pelo email
-    const user = await ctx.runQuery(internal.users.getUserByEmail, { email: args.email });
+    try {
+      // Buscar usuário pelo email
+      const user = await ctx.runQuery(internal.users.getUserByEmail, { email: args.email });
 
-    if (!user) {
-      throw new Error("Utilizador não encontrado.");
+      if (!user) {
+        throw new Error("Utilizador não encontrado.");
+      }
+
+      // Verificar senha usando bcrypt
+      const isPasswordCorrect = await bcrypt.compare(args.password, user.passwordHash);
+
+      if (!isPasswordCorrect) {
+        throw new Error("Palavra-passe incorreta.");
+      }
+
+      return { 
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      };
+    } catch (error) {
+      console.error("Login error:", error);
+      throw new Error(`Erro no login: ${error.message}`);
     }
-
-    // Verificar senha
-    const isPasswordCorrect = await bcrypt.compare(args.password, user.passwordHash);
-
-    if (!isPasswordCorrect) {
-      throw new Error("Palavra-passe incorreta.");
-    }
-
-    return { userId: user._id };
   },
 });
 
