@@ -20,10 +20,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
       const hasLocalStorage = typeof window !== 'undefined' && window.localStorage.getItem('userId');
       const hasCookie = typeof document !== 'undefined' && document.cookie.includes('userId=');
       
-      console.log('🔍 AuthGuard verificando:', { hasLocalStorage: !!hasLocalStorage, hasCookie });
-      
       if (!hasLocalStorage && !hasCookie) {
-        console.log('❌ Sem autenticação, redirecionando...');
         router.replace('/');
         return false;
       }
@@ -38,10 +35,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
     
     if (!isLoading) {
       if (!isAuthenticated) {
-        console.log('❌ Não autenticado após verificação, redirecionando...');
         router.replace('/');
       } else {
-        console.log('✅ Autenticado, permitindo acesso');
         setShouldRender(true);
       }
     }

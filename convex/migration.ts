@@ -39,11 +39,9 @@ export const migrateProposalsWithNames = action({
           
           if (foundModel) {
             // Atualiza a proposta com o nome do modelo
-            await ctx.runMutation(internal.proposals.updateProposalInternal, {
-              proposalId: proposal._id,
-              updates: {
-                modelName: foundModel.nome
-              }
+            await ctx.db.patch(proposal._id, {
+              vehicleBrand: foundModel.nome,
+              vehicleModel: foundModel.nome
             });
             updatedCount++;
             console.log(`Atualizada proposta ${proposal.proposalNumber}: ${foundModel.nome}`);

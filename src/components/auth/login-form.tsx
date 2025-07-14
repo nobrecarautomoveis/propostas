@@ -51,10 +51,7 @@ export function LoginForm() {
         const cookieValue = `userId=${result.userId}; path=/; max-age=86400; secure=${window.location.protocol === 'https:'}; samesite=strict`;
         document.cookie = cookieValue;
         
-        console.log('🍪 Cookie definido:', cookieValue);
-        
-        // Força reload da página para garantir que o middleware funcione
-        window.location.href = '/propostas';
+        router.push('/propostas');
       } else {
         toast({ title: 'Erro de Login', description: 'ID de usuário não retornado.', variant: 'destructive' });
       }

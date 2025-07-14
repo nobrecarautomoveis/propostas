@@ -62,8 +62,7 @@ export const useCurrentUser = () => {
   // Verifica se o usuário é válido
   useEffect(() => {
     if (!isLoading && userId && currentUser === null) {
-      // Usuário inválido, limpa tudo
-      console.log('❌ Usuário inválido, fazendo logout');
+      // Usuário inválido, fazer logout
       logout();
     }
   }, [currentUser, userId, isLoading]);
