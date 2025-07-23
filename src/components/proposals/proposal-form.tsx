@@ -639,6 +639,19 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
   const [modelName, setModelName] = useState<string | null>(null);
   const [fipeApiError, setFipeApiError] = useState<string | null>(null);
 
+  // Estados para armazenar dados FIPE originais (para reset ao fechar)
+  const [originalFipeData, setOriginalFipeData] = useState<{
+    brands: Brand[];
+    models: Model[];
+    years: Year[];
+    brandName: string | null;
+    modelName: string | null;
+    yearCodeFipe: string | null;
+  } | null>(null);
+
+  // Estado para controlar quando usuário está editando campos FIPE ativamente
+  const [isEditingFipe, setIsEditingFipe] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
@@ -746,6 +759,88 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
     return Object.keys(errors).length > 0;
   };
 
+  // Função para resetar dados FIPE aos valores originais (ao fechar sem salvar)
+  const resetFipeToOriginal = () => {
+    if (originalFipeData && originalData) {
+      // Resetar estados FIPE
+      setBrands(originalFipeData.brands);
+      setModels(originalFipeData.models);
+      setYears(originalFipeData.years);
+      setBrandName(originalFipeData.brandName);
+      setModelName(originalFipeData.modelName);
+      setYearCodeFipe(originalFipeData.yearCodeFipe);
+
+      // Resetar valores do formulário para os originais
+      form.setValue('brand', originalData.brand || '');
+      form.setValue('model', originalData.model || '');
+      form.setValue('modelYear', originalData.modelYear || '');
+      form.setValue('brandName', originalData.brandName || '');
+      form.setValue('modelName', originalData.modelName || '');
+    }
+  };
+
+  // Função para recarregar lista completa de marcas (ao clicar no campo)
+  const reloadBrandsForEditing = async () => {
+    const currentVehicleType = form.getValues('vehicleType');
+    if (currentVehicleType && (currentVehicleType === 'car' || currentVehicleType === 'motorcycle' || currentVehicleType === 'truck' || currentVehicleType === 'bus')) {
+      const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes', bus: 'caminhoes' };
+      try {
+        setIsEditingFipe(true); // Ativar modo edição
+        setIsLoadingBrands(true);
+        const brandsData = await fetchBrands(vehicleTypeMap[currentVehicleType as keyof typeof vehicleTypeMap]);
+        setBrands(brandsData);
+        setFipeApiError(null);
+      } catch (error) {
+        setFipeApiError('Erro ao carregar marcas');
+      } finally {
+        setIsLoadingBrands(false);
+      }
+    }
+  };
+
+  // Função para recarregar lista completa de modelos (ao clicar no campo)
+  const reloadModelsForEditing = async () => {
+    const currentVehicleType = form.getValues('vehicleType');
+    const currentBrandCode = form.getValues('brand');
+
+    if (currentVehicleType && currentBrandCode && (currentVehicleType === 'car' || currentVehicleType === 'motorcycle' || currentVehicleType === 'truck' || currentVehicleType === 'bus')) {
+      const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes', bus: 'caminhoes' };
+      try {
+        setIsEditingFipe(true); // Ativar modo edição
+        setIsLoadingModels(true);
+        const modelsData = await fetchModels(vehicleTypeMap[currentVehicleType as keyof typeof vehicleTypeMap], currentBrandCode);
+        setModels(modelsData);
+        setFipeApiError(null);
+      } catch (error) {
+        setFipeApiError('Erro ao carregar modelos');
+      } finally {
+        setIsLoadingModels(false);
+      }
+    }
+  };
+
+  // Função para recarregar lista completa de anos (ao clicar no campo)
+  const reloadYearsForEditing = async () => {
+    const currentVehicleType = form.getValues('vehicleType');
+    const currentBrandCode = form.getValues('brand');
+    const currentModelCode = form.getValues('model');
+
+    if (currentVehicleType && currentBrandCode && currentModelCode && (currentVehicleType === 'car' || currentVehicleType === 'motorcycle' || currentVehicleType === 'truck' || currentVehicleType === 'bus')) {
+      const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes', bus: 'caminhoes' };
+      try {
+        setIsEditingFipe(true); // Ativar modo edição
+        setIsLoadingYears(true);
+        const yearsData = await fetchYears(vehicleTypeMap[currentVehicleType as keyof typeof vehicleTypeMap], currentBrandCode, currentModelCode);
+        setYears(yearsData);
+        setFipeApiError(null);
+      } catch (error) {
+        setFipeApiError('Erro ao carregar anos');
+      } finally {
+        setIsLoadingYears(false);
+      }
+    }
+  };
+
   // Função para confirmar mudança de tipo de pessoa
   const confirmTypeChange = () => {
     if (!pendingTypeChange) return;
@@ -828,39 +923,54 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
         setYearCodeFipe(initialData.modelYear);
       }
 
-      // Carregar dados da API FIPE se necessário
+      // Carregar dados da API FIPE se necessário e armazenar como originais
       if (initialData.vehicleType && initialData.brand) {
         const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes', bus: 'caminhoes' };
         if (vehicleTypeMap[initialData.vehicleType as keyof typeof vehicleTypeMap]) {
-          // Carregar marcas
-          fetchBrands(vehicleTypeMap[initialData.vehicleType as keyof typeof vehicleTypeMap])
-            .then(data => {
-              setBrands(data);
-              const selectedBrand = data.find(b => b.codigo === initialData.brand);
+
+          const loadInitialFipeData = async () => {
+            try {
+              // Carregar marcas
+              const brandsData = await fetchBrands(vehicleTypeMap[initialData.vehicleType as keyof typeof vehicleTypeMap]);
+              setBrands(brandsData);
+              const selectedBrand = brandsData.find(b => b.codigo === initialData.brand);
               if (selectedBrand) {
                 setBrandName(selectedBrand.nome);
               }
-            });
 
-          // Carregar modelos se temos a marca
-          if (initialData.model) {
-            fetchModels(vehicleTypeMap[initialData.vehicleType as keyof typeof vehicleTypeMap], initialData.brand)
-              .then(data => {
-                setModels(data);
-                const selectedModel = data.find(m => String(m.codigo) === initialData.model);
+              let modelsData: Model[] = [];
+              let yearsData: Year[] = [];
+
+              // Carregar modelos se temos a marca
+              if (initialData.model) {
+                modelsData = await fetchModels(vehicleTypeMap[initialData.vehicleType as keyof typeof vehicleTypeMap], initialData.brand);
+                setModels(modelsData);
+                const selectedModel = modelsData.find(m => String(m.codigo) === initialData.model);
                 if (selectedModel) {
                   setModelName(selectedModel.nome);
                 }
-              });
-          }
 
-          // Carregar anos se temos modelo
-          if (initialData.model) {
-            fetchYears(vehicleTypeMap[initialData.vehicleType as keyof typeof vehicleTypeMap], initialData.brand, initialData.model)
-              .then(data => {
-                setYears(data);
+                // Carregar anos se temos modelo
+                yearsData = await fetchYears(vehicleTypeMap[initialData.vehicleType as keyof typeof vehicleTypeMap], initialData.brand, initialData.model);
+                setYears(yearsData);
+              }
+
+              // Armazenar dados FIPE originais para reset posterior
+              setOriginalFipeData({
+                brands: brandsData,
+                models: modelsData,
+                years: yearsData,
+                brandName: selectedBrand?.nome || null,
+                modelName: modelsData.find(m => String(m.codigo) === initialData.model)?.nome || null,
+                yearCodeFipe: initialData.modelYear || null
               });
-          }
+
+            } catch (error) {
+              console.error('Erro ao carregar dados FIPE iniciais:', error);
+            }
+          };
+
+          loadInitialFipeData();
         }
       }
     }
@@ -889,6 +999,9 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
 
   // Fetch Brands
   useEffect(() => {
+    // NÃO executar se usuário está editando campos FIPE ativamente
+    if (isEditingFipe) return;
+
     if (vehicleType && (vehicleType === 'car' || vehicleType === 'motorcycle' || vehicleType === 'truck' || vehicleType === 'bus')) {
       const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes', bus: 'caminhoes' };
       setIsLoadingBrands(true);
@@ -918,10 +1031,13 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
         setFipeDetails(null);
       }
     }
-  }, [vehicleType, toast]);
+  }, [vehicleType, isEditingFipe, toast]);
 
   // Fetch Models
   useEffect(() => {
+    // NÃO executar se usuário está editando campos FIPE ativamente
+    if (isEditingFipe) return;
+
     if (brandCode && vehicleType && (vehicleType === 'car' || vehicleType === 'motorcycle' || vehicleType === 'truck' || vehicleType === 'bus')) {
       const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes', bus: 'caminhoes' };
       setIsLoadingModels(true);
@@ -1202,7 +1318,31 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               <FormField control={form.control} name="vehicleType" render={({ field }) => (
                   <FormItem>
                       <FormLabel>Tipo de Veículo</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+
+                            // Limpar todos os campos FIPE dependentes quando tipo muda
+                            form.setValue('brand', '');
+                            form.setValue('model', '');
+                            form.setValue('modelYear', '');
+                            form.setValue('brandName', '');
+                            form.setValue('modelName', '');
+
+                            // Limpar estados FIPE
+                            setBrands([]);
+                            setModels([]);
+                            setYears([]);
+                            setBrandName(null);
+                            setModelName(null);
+                            setYearCodeFipe(null);
+                            setFipeDetails(null);
+
+                            // Desativar modo edição
+                            setIsEditingFipe(false);
+                          }}
+                          value={field.value}
+                      >
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                           <SelectContent>
                               <SelectItem value="car">Carro</SelectItem>
@@ -1247,14 +1387,31 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               <FormField control={form.control} name="brand" render={({ field }) => (
                   <FormItem>
                       <FormLabel>Marca</FormLabel>
-                      <Select 
+                      <Select
                           onValueChange={(value) => {
                             field.onChange(value);
                             const selectedBrand = brands.find(b => b.codigo === value);
                             setBrandName(selectedBrand ? selectedBrand.nome : null);
+
+                            // Limpar campos dependentes quando marca muda
+                            form.setValue('model', '');
+                            form.setValue('modelYear', '');
+                            setModels([]);
+                            setYears([]);
+                            setModelName(null);
+                            setYearCodeFipe(null);
+
+                            // Desativar modo edição após seleção
+                            setIsEditingFipe(false);
                           }}
-                          value={field.value} 
+                          value={field.value}
                           disabled={isLoadingBrands || brands.length === 0}
+                          onOpenChange={(open) => {
+                            // Ao abrir o select, recarregar lista completa se necessário
+                            if (open && initialData && brands.length <= 1) {
+                              reloadBrandsForEditing();
+                            }
+                          }}
                       >
                           <FormControl><SelectTrigger>
                               {isLoadingBrands && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1270,14 +1427,28 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               <FormField control={form.control} name="model" render={({ field }) => (
                   <FormItem>
                       <FormLabel>Modelo</FormLabel>
-                      <Select 
+                      <Select
                           onValueChange={(value) => {
                             field.onChange(value);
                             const selectedModel = models.find(m => m.codigo === value);
                             setModelName(selectedModel ? selectedModel.nome : null);
+
+                            // Limpar campos dependentes quando modelo muda
+                            form.setValue('modelYear', '');
+                            setYears([]);
+                            setYearCodeFipe(null);
+
+                            // Desativar modo edição após seleção
+                            setIsEditingFipe(false);
                           }}
-                          value={field.value} 
+                          value={field.value}
                           disabled={isLoadingModels || models.length === 0}
+                          onOpenChange={(open) => {
+                            // Ao abrir o select, recarregar lista completa se necessário
+                            if (open && initialData && models.length <= 1) {
+                              reloadModelsForEditing();
+                            }
+                          }}
                       >
                           <FormControl><SelectTrigger>
                               {isLoadingModels && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1294,13 +1465,22 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               <FormField control={form.control} name="modelYear" render={({ field }) => (
                   <FormItem>
                       <FormLabel>Ano Modelo</FormLabel>
-                      <Select 
+                      <Select
                           onValueChange={(value) => {
                             field.onChange(value);
                             setYearCodeFipe(value);
+
+                            // Desativar modo edição após seleção
+                            setIsEditingFipe(false);
                           }}
-                          value={field.value || ""} 
+                          value={field.value || ""}
                           disabled={isLoadingYears || years.length === 0}
+                          onOpenChange={(open) => {
+                            // Ao abrir o select, recarregar lista completa se necessário
+                            if (open && initialData && years.length <= 1) {
+                              reloadYearsForEditing();
+                            }
+                          }}
                       >
                           <FormControl><SelectTrigger>
                               {isLoadingYears && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
