@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQuery } from 'convex/react';
+import { useAction, useQuery } from 'convex/react';
 import { api } from '../../../../../convex/_generated/api';
 import { UserForm } from '@/components/users/user-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +22,7 @@ export default function EditUserPage({ params }: EditUserPageProps) {
   const router = useRouter();
   const { currentUser } = useCurrentUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const updateUser = useMutation(api.users.updateUser);
+  const updateUser = useAction(api.userActions.updateUser);
   
   const userToEdit = useQuery(
     api.users.getUserById,

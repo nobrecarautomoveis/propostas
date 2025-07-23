@@ -13,7 +13,7 @@ export function Header() {
   const isAdmin = currentUser?.role === "ADMIN";
 
   return (
-    <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b bg-card px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-4 sm:px-6 shadow-sm">
       <Link href="/propostas">
           <Image 
             src="/logo.png" 
@@ -23,17 +23,26 @@ export function Header() {
           />
       </Link>
 
-      <div className="ml-auto flex items-center gap-4">
+      <div className="ml-auto flex items-center gap-3">
         <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              <UserRound className="h-5 w-5" />
+            <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
+              <div className="h-8 w-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center">
+                <span className="text-sm font-semibold text-blue-700">
+                  {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'A'}
+                </span>
+              </div>
               <span className="sr-only">Toggle user menu</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{currentUser?.name || 'Minha Conta'}</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="font-semibold">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{currentUser?.name || 'Usuário'}</p>
+                <p className="text-xs leading-none text-muted-foreground">{currentUser?.email || ''}</p>
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             {isAdmin && (
               <>

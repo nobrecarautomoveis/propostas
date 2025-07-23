@@ -1320,7 +1320,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField control={form.control} name="proposalType" render={({ field }) => (
                   <FormItem>
-                      <FormLabel>Tipo de Proposta</FormLabel>
+                      <FormLabel className="font-medium">Tipo de Proposta</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                           <SelectContent><SelectItem value="financing">Financiamento</SelectItem><SelectItem value="refinancing">Refinanciamento</SelectItem></SelectContent>
@@ -1330,7 +1330,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               )}/>
               <FormField control={form.control} name="vehicleType" render={({ field }) => (
                   <FormItem>
-                      <FormLabel>Tipo de Veículo</FormLabel>
+                      <FormLabel className="font-medium">Tipo de Veículo</FormLabel>
                       <Select
                           onValueChange={(value) => {
                             field.onChange(value);
@@ -1369,7 +1369,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               )}/>
                <FormField control={form.control} name="isFinanced" render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Veículo já financiado?</FormLabel>
+                    <FormLabel className="font-medium">Veículo já financiado?</FormLabel>
                     <Select onValueChange={(value) => field.onChange(value === 'true')} value={field.value === undefined ? '' : field.value ? 'true' : 'false'}>
                         <FormControl>
                             <SelectTrigger>
@@ -1386,7 +1386,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               )}/>
               <FormField control={form.control} name="vehicleCondition" render={({ field }) => (
                   <FormItem className="space-y-3 pt-2">
-                      <FormLabel>Condição do Veículo</FormLabel>
+                      <FormLabel className="font-medium">Condição do Veículo</FormLabel>
                       <FormControl>
                           <RadioGroup onValueChange={field.onChange} value={field.value || ''} className="flex space-x-4">
                               <FormItem className="flex items-center space-x-2"><FormControl><RadioGroupItem value="new" /></FormControl><FormLabel className="font-normal">Novo</FormLabel></FormItem>
@@ -1396,10 +1396,10 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       <FormMessage />
                   </FormItem>
               )}/>
-              <FormField control={form.control} name="plate" render={({ field }) => (<FormItem><FormLabel>Placa</FormLabel><FormControl><Input placeholder="ABC-1234" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+              <FormField control={form.control} name="plate" render={({ field }) => (<FormItem><FormLabel className="font-medium">Placa</FormLabel><FormControl><Input placeholder="ABC-1234" {...field} /></FormControl><FormMessage /></FormItem>)}/>
               <FormField control={form.control} name="brand" render={({ field }) => (
                   <FormItem>
-                      <FormLabel>Marca</FormLabel>
+                      <FormLabel className="font-medium">Marca</FormLabel>
                       <Select
                           onValueChange={(value) => {
                             field.onChange(value);
@@ -1439,7 +1439,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               )}/>
               <FormField control={form.control} name="model" render={({ field }) => (
                   <FormItem>
-                      <FormLabel>Modelo</FormLabel>
+                      <FormLabel className="font-medium">Modelo</FormLabel>
                       <Select
                           onValueChange={(value) => {
                             field.onChange(value);
@@ -1477,7 +1477,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               {/* Movido: Ano Modelo logo após Modelo */}
               <FormField control={form.control} name="modelYear" render={({ field }) => (
                   <FormItem>
-                      <FormLabel>Ano Modelo</FormLabel>
+                      <FormLabel className="font-medium">Ano Modelo</FormLabel>
                       <Select
                           onValueChange={(value) => {
                             field.onChange(value);
@@ -1506,10 +1506,10 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       <FormMessage />
                   </FormItem>
               )}/>
-              <FormField control={form.control} name="bodywork" render={({ field }) => (<FormItem><FormLabel>Carroceria (opcional)</FormLabel><FormControl><Input placeholder="Ex: SUV" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+              <FormField control={form.control} name="bodywork" render={({ field }) => (<FormItem><FormLabel className="font-medium">Carroceria (opcional)</FormLabel><FormControl><Input placeholder="Ex: SUV" {...field} /></FormControl><FormMessage /></FormItem>)}/>
               <FormField control={form.control} name="manufactureYear" render={({ field }) => (
                   <FormItem>
-                      <FormLabel>Ano Fabricação</FormLabel>
+                      <FormLabel className="font-medium">Ano Fabricação</FormLabel>
                       <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value ? String(field.value) : ''}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecione o ano..." /></SelectTrigger></FormControl>
                           <SelectContent>
@@ -1519,10 +1519,10 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       <FormMessage />
                   </FormItem>
               )}/>
-              <FormField control={form.control} name="version" render={({ field }) => (<FormItem><FormLabel>Versão (opcional)</FormLabel><FormControl><Input placeholder="Ex: Highline" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+              <FormField control={form.control} name="version" render={({ field }) => (<FormItem><FormLabel className="font-medium">Versão (opcional)</FormLabel><FormControl><Input placeholder="Ex: Highline" {...field} /></FormControl><FormMessage /></FormItem>)}/>
               <FormField control={form.control} name="fuel" render={({ field }) => (
                   <FormItem>
-                      <FormLabel>Combustível</FormLabel>
+                      <FormLabel className="font-medium">Combustível</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                           <SelectContent><SelectItem value="flex">Flex</SelectItem><SelectItem value="gasoline">Gasolina</SelectItem><SelectItem value="diesel">Diesel</SelectItem><SelectItem value="electric">Elétrico</SelectItem><SelectItem value="hybrid">Híbrido</SelectItem></SelectContent>
@@ -1532,7 +1532,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               )}/>
                <FormField control={form.control} name="transmission" render={({ field }) => (
                   <FormItem>
-                      <FormLabel>Transmissão</FormLabel>
+                      <FormLabel className="font-medium">Transmissão</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger></FormControl>
                           <SelectContent>
@@ -1545,10 +1545,10 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       <FormMessage />
                   </FormItem>
               )}/>
-              <FormField control={form.control} name="color" render={({ field }) => (<FormItem><FormLabel>Cor</FormLabel><FormControl><Input placeholder="Ex: Preto" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+              <FormField control={form.control} name="color" render={({ field }) => (<FormItem><FormLabel className="font-medium">Cor</FormLabel><FormControl><Input placeholder="Ex: Preto" {...field} /></FormControl><FormMessage /></FormItem>)}/>
               <FormField control={form.control} name="value" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Valor do Veículo</FormLabel>
+                  <FormLabel className="font-medium">Valor do Veículo</FormLabel>
                   <FormControl>
                     <Input
                       type="text"
@@ -1564,7 +1564,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               {/* Novo campo: Valor a Financiar */}
               <FormField control={form.control} name="valorFinanciar" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Valor a Financiar</FormLabel>
+                  <FormLabel className="font-medium">Valor a Financiar</FormLabel>
                   <FormControl>
                     <Input
                       type="text"
@@ -1590,7 +1590,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               )}/>
               <FormField control={form.control} name="licensingLocation" render={({ field }) => (
                   <FormItem>
-                      <FormLabel>Local de Licenciamento</FormLabel>
+                      <FormLabel className="font-medium">Local de Licenciamento</FormLabel>
                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecione o estado..." /></SelectTrigger></FormControl>
                            <SelectContent>
@@ -1605,7 +1605,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               {/* Movido: Status ao lado do Local de Licenciamento */}
               <FormField control={form.control} name="status" render={({ field }) => (
                   <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel className="font-medium">Status</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || ''}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecione o status..." /></SelectTrigger></FormControl>
                           <SelectContent><SelectItem value="Em Análise">Em Análise</SelectItem><SelectItem value="Aprovada">Aprovada</SelectItem><SelectItem value="Recusada">Recusada</SelectItem></SelectContent>
@@ -1651,7 +1651,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
             {/* Seletor tipo de pessoa */}
             <FormField control={form.control} name="tipoPessoa" render={({ field }) => (
               <FormItem className="mb-4">
-                <FormLabel>Tipo de Pessoa</FormLabel>
+                <FormLabel className="font-medium">Tipo de Pessoa</FormLabel>
                 <FormControl>
                   <RadioGroup
                     value={field.value}
@@ -1808,7 +1808,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               {tipoPessoa === 'fisica' && <>
                 <FormField control={form.control} name="nome" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome Completo</FormLabel>
+                    <FormLabel className="font-medium">Nome Completo</FormLabel>
                     <FormControl>
                       <Input placeholder="Digite o nome completo" {...field} />
                     </FormControl>
@@ -1817,7 +1817,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                 )}/>
                 <FormField control={form.control} name="dataNascimento" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data de Nascimento</FormLabel>
+                    <FormLabel className="font-medium">Data de Nascimento</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -1863,7 +1863,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               {tipoPessoa === 'juridica' && <>
                 <FormField control={form.control} name="razaoSocial" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Razão Social</FormLabel>
+                    <FormLabel className="font-medium">Razão Social</FormLabel>
                     <FormControl>
                       <Input placeholder="Digite a razão social" {...field} />
                     </FormControl>
@@ -1882,7 +1882,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                 {/* CNPJ logo após Nome Fantasia */}
                 <FormField control={form.control} name="cnpjPJ" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>CNPJ</FormLabel>
+                    <FormLabel className="font-medium">CNPJ</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Digite o CNPJ"
@@ -1912,7 +1912,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                 )}/>
                 <FormField control={form.control} name="emailPJ" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>E-mail</FormLabel>
+                    <FormLabel className="font-medium">E-mail</FormLabel>
                     <FormControl>
                       <Input placeholder="Digite o e-mail" {...field} />
                     </FormControl>
@@ -1923,7 +1923,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                 {/* Telefones para pessoa jurídica */}
                 <FormField control={form.control} name="telefonePessoalPJ" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Telefone Comercial</FormLabel>
+                    <FormLabel className="font-medium">Telefone Comercial</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="(00) 0 0000-0000"
@@ -1959,7 +1959,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                 {/* Endereço - campo comum */}
                 <FormField control={form.control} name="enderecoPJ" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Endereço</FormLabel>
+                    <FormLabel className="font-medium">Endereço</FormLabel>
                     <FormControl>
                       <div className="flex flex-col gap-2">
                         <Input
@@ -2143,7 +2143,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               {tipoPessoa === 'fisica' && (
                 <FormField control={form.control} name="cpfPF" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>CPF</FormLabel>
+                    <FormLabel className="font-medium">CPF</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Digite o cpf"

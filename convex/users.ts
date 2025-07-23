@@ -9,6 +9,25 @@ export const getUserById = query({
   },
 });
 
+// Query para buscar todos os usuários (para filtros e listagens)
+export const getAllUsers = query({
+  args: { requesterId: v.union(v.id("users"), v.null()) },
+  handler: async (ctx, args) => {
+    if (!args.requesterId) {
+      return [];
+    }
+
+    // Retorna apenas id, name e email (dados básicos para listagem)
+    const users = await ctx.db.query("users").collect();
+    return users.map(user => ({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    }));
+  },
+});
+
 export const getAllAdmins = internalQuery({
   handler: async (ctx) => {
     return ctx.db
@@ -68,7 +87,7 @@ export const deleteUserById = internalMutation({
   },
 });
 
-export const getAllUsers = internalQuery({
+export const getAllUsersInternal = internalQuery({
   args: {},
   handler: async (ctx) => {
     return ctx.db.query("users").collect();

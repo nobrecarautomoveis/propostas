@@ -79,7 +79,7 @@ export function UserForm({ onSubmit, initialData, isSubmitting }: UserFormProps)
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nome</FormLabel>
+                <FormLabel className="font-medium">Nome</FormLabel>
                 <FormControl>
                   <Input placeholder="Nome do usuário" {...field} />
                 </FormControl>
@@ -92,7 +92,7 @@ export function UserForm({ onSubmit, initialData, isSubmitting }: UserFormProps)
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel className="font-medium">Email</FormLabel>
                 <FormControl>
                   <Input type="email" placeholder="email@exemplo.com" {...field} disabled={!!initialData} />
                 </FormControl>
@@ -105,7 +105,7 @@ export function UserForm({ onSubmit, initialData, isSubmitting }: UserFormProps)
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Senha {initialData ? '(Deixe em branco para não alterar)' : ''}</FormLabel>
+                <FormLabel className="font-medium">Senha {initialData ? '(Deixe em branco para não alterar)' : ''}</FormLabel>
                 <FormControl>
                   <Input type="password" placeholder="******" {...field} />
                 </FormControl>
@@ -118,7 +118,7 @@ export function UserForm({ onSubmit, initialData, isSubmitting }: UserFormProps)
             name="role"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Função</FormLabel>
+                <FormLabel className="font-medium">Função</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>

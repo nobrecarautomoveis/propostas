@@ -151,6 +151,32 @@ export const login = action({
   },
 });
 
+// Função temporária para diagnóstico de usuários
+export const debugUsers = action({
+  args: {},
+  handler: async (ctx, args) => {
+    const users = await ctx.runQuery(internal.users.getAllUsersInternal, {});
+    console.log("Total de usuários:", users.length);
+    users.forEach((user, index) => {
+      console.log(`Usuário ${index + 1}:`, {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        hasPassword: !!user.passwordHash,
+        passwordLength: user.passwordHash?.length || 0
+      });
+    });
+    return users.map(u => ({
+      id: u._id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      hasPassword: !!u.passwordHash
+    }));
+  },
+});
+
 export const createFirstAdmin = action({
   args: {
     name: v.string(),
@@ -158,7 +184,7 @@ export const createFirstAdmin = action({
     password: v.string(),
   },
   handler: async (ctx, args) => {
-    const users = await ctx.runQuery(internal.users.getAllUsers, {});
+    const users = await ctx.runQuery(internal.users.getAllUsersInternal, {});
     if (users.length > 0) {
       throw new Error("Já existem usuários no banco de dados. O primeiro ADMIN não pode ser criado.");
     }

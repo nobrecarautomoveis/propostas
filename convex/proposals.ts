@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query, action, internalQuery, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 
-// Consulta para obter todas as propostas
+// Consulta para obter todas as propostas com dados do usuário criador
 export const getProposals = query({
   args: { userId: v.union(v.id("users"), v.null()) },
   handler: async (ctx, args) => {
@@ -11,8 +11,34 @@ export const getProposals = query({
       return [];
     }
 
-    // Retorna todas as propostas para qualquer usuário autenticado.
-    return ctx.db.query("proposals").order("desc").collect();
+    // Busca todas as propostas
+    const proposals = await ctx.db.query("proposals").order("desc").collect();
+
+    // Para cada proposta, busca os dados básicos do usuário criador
+    const proposalsWithUser = await Promise.all(
+      proposals.map(async (proposal) => {
+        let createdBy = null;
+
+        // Busca dados do usuário criador (se existir)
+        if (proposal.salespersonId) {
+          const user = await ctx.db.get(proposal.salespersonId);
+          if (user) {
+            createdBy = {
+              _id: user._id,
+              name: user.name,
+              email: user.email
+            };
+          }
+        }
+
+        return {
+          ...proposal,
+          createdBy // Adiciona dados do usuário criador
+        };
+      })
+    );
+
+    return proposalsWithUser;
   },
 });
 
@@ -35,10 +61,8 @@ export const getProposalById = query({
 
     const currentUser = await ctx.db.get(args.userId);
 
-    // Verifica se o usuário tem permissão para ver esta proposta
-    if (currentUser.role !== "ADMIN" && proposal.salespersonId !== args.userId) {
-      throw new Error("Você não tem permissão para ver esta proposta.");
-    }
+    // Qualquer usuário autenticado pode ver propostas
+    // (Transparência total no sistema)
 
     return proposal;
   },
@@ -227,9 +251,8 @@ export const updateProposal = mutation({
       throw new Error("Usuário não encontrado.");
     }
 
-    if (user.role !== "ADMIN" && proposal.salespersonId !== userId) {
-      throw new Error("Você não tem permissão para atualizar esta proposta.");
-    }
+    // Qualquer usuário autenticado pode editar propostas
+    // (Apenas criação/exclusão de usuários é restrita a ADMINs)
 
     // Atualiza a proposta
     await ctx.db.patch(proposalId, updates);
@@ -257,9 +280,8 @@ export const deleteProposal = mutation({
       throw new Error("Usuário não encontrado.");
     }
 
-    if (user.role !== "ADMIN" && proposal.salespersonId !== args.userId) {
-      throw new Error("Você não tem permissão para excluir esta proposta.");
-    }
+    // Qualquer usuário autenticado pode excluir propostas
+    // (Ajuste conforme regras de negócio se necessário)
 
     // Exclui a proposta
     await ctx.db.delete(args.proposalId);

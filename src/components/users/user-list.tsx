@@ -70,9 +70,9 @@ export function UserList() {
     api.users.getUsers,
     currentUser ? { userId: currentUser._id } : 'skip',
   )
-  const deleteUser = useAction(api.users.deleteUser)
-  const createUser = useAction(api.users.createUser)
-  const updateUser = useAction(api.users.updateUser)
+  const deleteUser = useAction(api.userActions.deleteUser)
+  const createUser = useAction(api.userActions.createUser)
+  const updateUser = useAction(api.userActions.updateUser)
 
   const handleFormSubmit = async (data: any) => {
     if (!currentUser) {
@@ -184,27 +184,40 @@ export function UserList() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border">
+              <div className="rounded-md border overflow-hidden">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Função</TableHead>
-                      <TableHead className="w-[64px]"></TableHead>
+                      <TableHead className="w-[200px] font-semibold py-4">Nome</TableHead>
+                      <TableHead className="min-w-[250px] font-semibold py-4">Email</TableHead>
+                      <TableHead className="w-[120px] font-semibold py-4">Função</TableHead>
+                      <TableHead className="w-[60px] py-4"><span className="sr-only">Ações</span></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users?.map((user) => (
-                      <TableRow key={user._id}>
-                        <TableCell>{user.name}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>
+                    {users && users.length > 0 ? (
+                      users.map((user) => (
+                      <TableRow key={user._id} className="hover:bg-muted/50">
+                        <TableCell className="py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <span className="text-xs font-medium text-primary">
+                                {user.name ? user.name.charAt(0).toUpperCase() : '?'}
+                              </span>
+                            </div>
+                            <span className="text-sm font-medium">{user.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm py-3 text-muted-foreground">{user.email}</TableCell>
+                        <TableCell className="py-3">
+                          <Badge
+                            variant={user.role === 'ADMIN' ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
                             {user.role}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="py-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">
@@ -231,7 +244,17 @@ export function UserList() {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="py-8 text-center text-muted-foreground"
+                        >
+                          Nenhum usuário encontrado
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>

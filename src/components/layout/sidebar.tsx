@@ -3,9 +3,9 @@ import { NavLinks } from "./nav-links";
 
 export function AppSidebar() {
   return (
-    <aside className="hidden w-64 flex-col border-r bg-card sm:flex">
-      <div className="flex h-16 items-center border-b px-6">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+    <aside className="hidden w-64 flex-col border-r bg-card/50 backdrop-blur sm:flex">
+      <div className="flex h-16 items-center border-b px-6 bg-muted/30">
+        <Link href="/propostas" className="flex items-center gap-2 font-semibold text-foreground hover:text-primary transition-colors">
            <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -26,11 +26,11 @@ export function AppSidebar() {
               <path d="m20 2-2 2" />
               <path d="m3 21 2-2" />
             </svg>
-          <span className="">Fale Mais Fácil</span>
+          <span className="text-sm">Propostas</span>
         </Link>
       </div>
-      <div className="flex-1 overflow-auto py-2">
-        <nav className="grid items-start px-4 text-sm font-medium">
+      <div className="flex-1 overflow-auto py-4">
+        <nav className="grid items-start px-4 text-sm font-medium gap-1">
           <NavLinks />
         </nav>
       </div>

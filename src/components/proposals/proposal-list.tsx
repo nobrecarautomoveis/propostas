@@ -37,15 +37,23 @@ export function ProposalList() {
     const { currentUser } = useCurrentUser();
     const [search, setSearch] = useState('');
     const [selectedMonth, setSelectedMonth] = useState<string>('all');
+    const [selectedUser, setSelectedUser] = useState<string>('all');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
     const [proposalToDelete, setProposalToDelete] = useState<Proposal | null>(null);
 
     // Consulta as propostas do backend
     const proposals = useQuery(
-      api.proposals.getProposals, 
+      api.proposals.getProposals,
       { userId: currentUser?._id || null },
       { enabled: !!currentUser?._id } // Só executa se houver usuário autenticado
+    );
+
+    // Consulta todos os usuários para o filtro
+    const users = useQuery(
+      api.users.getAllUsers,
+      { requesterId: currentUser?._id || null },
+      { enabled: !!currentUser?._id }
     );
 
     // Mutations para criar, atualizar e excluir propostas
@@ -191,27 +199,32 @@ export function ProposalList() {
         return months;
     };
 
-    // Filtra as propostas com base na pesquisa e mês selecionado
+    // Filtra as propostas com base na pesquisa, mês e usuário selecionados
     const filteredProposals = proposals?.filter(p => {
         const searchTerm = search.toLowerCase();
-        const brandMatch = (p.brandName && p.brandName.toLowerCase().includes(searchTerm)) || 
+        const brandMatch = (p.brandName && p.brandName.toLowerCase().includes(searchTerm)) ||
                          (p.brand && p.brand.toLowerCase().includes(searchTerm));
-        const modelMatch = (p.modelName && p.modelName.toLowerCase().includes(searchTerm)) || 
+        const modelMatch = (p.modelName && p.modelName.toLowerCase().includes(searchTerm)) ||
                          (p.model && p.model.toLowerCase().includes(searchTerm));
         const proposalNumberMatch = p.proposalNumber.toLowerCase().includes(searchTerm);
-        
+
         const searchMatch = brandMatch || modelMatch || proposalNumberMatch;
-        
+
         // Filtro por mês
-        if (selectedMonth === 'all') {
-            return searchMatch;
+        let monthMatch = true;
+        if (selectedMonth !== 'all') {
+            const proposalDate = new Date(p.dateAdded);
+            const proposalMonth = format(proposalDate, 'MM');
+            monthMatch = proposalMonth === selectedMonth;
         }
-        
-        const proposalDate = new Date(p.dateAdded);
-        const proposalMonth = format(proposalDate, 'MM');
-        const monthMatch = proposalMonth === selectedMonth;
-        
-        return searchMatch && monthMatch;
+
+        // Filtro por usuário
+        let userMatch = true;
+        if (selectedUser !== 'all') {
+            userMatch = p.createdBy?._id === selectedUser;
+        }
+
+        return searchMatch && monthMatch && userMatch;
     }) || [];
 
   return (
@@ -254,36 +267,85 @@ export function ProposalList() {
                           ))}
                         </SelectContent>
                       </Select>
+                      <Select value={selectedUser} onValueChange={setSelectedUser}>
+                        <SelectTrigger className="w-full sm:w-[200px]">
+                          <SelectValue placeholder="Todos os usuários" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos os usuários</SelectItem>
+                          {users?.map((user) => (
+                            <SelectItem key={user._id} value={user._id}>
+                              <div className="flex items-center gap-2">
+                                <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <span className="text-xs font-medium text-primary">
+                                    {user.name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                {user.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                   </div>
                 </div>
-                <div className="rounded-md border">
+                <div className="rounded-md border overflow-hidden">
                   <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-muted/50">
                       <TableRow>
-                        <TableHead className="w-[150px]">Nº da Proposta</TableHead>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Tipo de Proposta</TableHead>
-                        <TableHead>Marca/Modelo</TableHead>
-                        <TableHead className="hidden md:table-cell">Ano</TableHead>
-                        <TableHead className="hidden md:table-cell">Valor a Financiar</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead><span className="sr-only">Ações</span></TableHead>
+                        <TableHead className="w-[120px] font-semibold py-4 text-center">Nº Proposta</TableHead>
+                        <TableHead className="w-[100px] font-semibold py-4 text-center">Data</TableHead>
+                        <TableHead className="w-[180px] hidden lg:table-cell font-semibold py-4 text-center">Criado por</TableHead>
+                        <TableHead className="w-[140px] font-semibold py-4 text-center">Tipo</TableHead>
+                        <TableHead className="min-w-[200px] font-semibold py-4 text-center">Marca/Modelo</TableHead>
+                        <TableHead className="w-[80px] hidden md:table-cell font-semibold py-4 text-center">Ano</TableHead>
+                        <TableHead className="w-[130px] hidden md:table-cell font-semibold py-4 text-center">Valor</TableHead>
+                        <TableHead className="w-[120px] font-semibold py-4 text-center">Status</TableHead>
+                        <TableHead className="w-[60px] py-4 text-center"><span className="sr-only">Ações</span></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredProposals.length > 0 ? (
                             filteredProposals.map((proposal) => (
-                                <TableRow key={proposal._id}>
-                                    <TableCell className="font-medium">{proposal.proposalNumber}</TableCell>
-                                    <TableCell className="font-medium">{format(new Date(proposal.dateAdded), 'dd/MM/yyyy')}</TableCell>
-                                    <TableCell>{proposal.proposalType === 'financing' ? 'Financiamento' : 'Refinanciamento'}</TableCell>
-                                    <TableCell>
-                                        <div className="font-medium">{proposal.brandName || proposal.brand} / {proposal.modelName || proposal.model}</div>
+                                <TableRow key={proposal._id} className="hover:bg-muted/50">
+                                    <TableCell className="font-medium text-sm py-3 text-center">{proposal.proposalNumber}</TableCell>
+                                    <TableCell className="text-sm py-3 text-center">{format(new Date(proposal.dateAdded), 'dd/MM')}</TableCell>
+                                    <TableCell className="hidden lg:table-cell py-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                <span className="text-xs font-medium text-primary">
+                                                    {proposal.createdBy?.name ? proposal.createdBy.name.charAt(0).toUpperCase() : '?'}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-sm font-medium truncate">{proposal.createdBy?.name || 'Não encontrado'}</span>
+                                                <span className="text-xs text-muted-foreground truncate">{proposal.createdBy?.email || ''}</span>
+                                            </div>
+                                        </div>
                                     </TableCell>
-                                    <TableCell className="hidden md:table-cell">{typeof proposal.modelYear === 'string' && proposal.modelYear.includes('-') ? proposal.modelYear.split('-')[0] : proposal.modelYear}</TableCell>
-                                    <TableCell className="hidden md:table-cell">{proposal.valorFinanciar || 'N/A'}</TableCell>
-                                    <TableCell><Badge variant={statusVariant[proposal.status] || 'outline'}>{proposal.status}</Badge></TableCell>
-                                    <TableCell>
+                                    <TableCell className="text-sm py-3 text-center">
+                                        <span className="inline-block px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
+                                            {proposal.proposalType === 'financing' ? 'Financ.' : 'Refinanc.'}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="py-3">
+                                        <div className="space-y-1">
+                                            <div className="font-medium text-sm truncate">{proposal.brandName || proposal.brand}</div>
+                                            <div className="text-xs text-muted-foreground truncate">{proposal.modelName || proposal.model}</div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell text-sm py-3 text-center">
+                                        {typeof proposal.modelYear === 'string' && proposal.modelYear.includes('-') ? proposal.modelYear.split('-')[0] : proposal.modelYear}
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell text-sm py-3 font-medium text-center">
+                                        {proposal.valorFinanciar || 'N/A'}
+                                    </TableCell>
+                                    <TableCell className="py-3 text-center">
+                                        <Badge variant={statusVariant[proposal.status] || 'outline'} className="text-xs">
+                                            {proposal.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-center">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="icon">
@@ -308,7 +370,7 @@ export function ProposalList() {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={8} className="h-24 text-center">
+                                <TableCell colSpan={9} className="h-24 text-center">
                                     Nenhuma proposta encontrada.
                                 </TableCell>
                             </TableRow>
