@@ -84,6 +84,7 @@ export const createProposal = mutation({
     telefoneReferenciaPF: v.optional(v.string()),
     cepPF: v.optional(v.string()),
     enderecoPF: v.optional(v.string()),
+    observacoesPF: v.optional(v.string()),
 
     nome: v.optional(v.string()),
     dataNascimento: v.optional(v.string()),
@@ -104,6 +105,7 @@ export const createProposal = mutation({
     telefoneReferenciaPJ: v.optional(v.string()),
     cepPJ: v.optional(v.string()),
     enderecoPJ: v.optional(v.string()),
+    observacoesPJ: v.optional(v.string()),
 
     razaoSocial: v.optional(v.string()),
     nomeFantasia: v.optional(v.string()),
@@ -179,6 +181,7 @@ export const updateProposal = mutation({
     telefoneReferenciaPF: v.optional(v.string()),
     cepPF: v.optional(v.string()),
     enderecoPF: v.optional(v.string()),
+    observacoesPF: v.optional(v.string()),
 
     nome: v.optional(v.string()),
     dataNascimento: v.optional(v.string()),
@@ -199,6 +202,7 @@ export const updateProposal = mutation({
     telefoneReferenciaPJ: v.optional(v.string()),
     cepPJ: v.optional(v.string()),
     enderecoPJ: v.optional(v.string()),
+    observacoesPJ: v.optional(v.string()),
 
     razaoSocial: v.optional(v.string()),
     nomeFantasia: v.optional(v.string()),

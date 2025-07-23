@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -196,6 +197,10 @@ const formSchema = z.object({
   telefoneReferenciaPF: z.string().optional(),
   cepPF: z.string().optional(),
   enderecoPF: z.string().optional(),
+  observacoesPF: z.string().optional().refine((value) => {
+    if (!value) return true; // Campo opcional
+    return value.length <= 1000;
+  }, { message: 'Observações devem ter no máximo 1000 caracteres.' }),
 
   // Dados pessoais - Pessoa Física (serão validados condicionalmente)
   nome: z.string().optional(),
@@ -252,6 +257,10 @@ const formSchema = z.object({
   telefoneReferenciaPJ: z.string().optional(),
   cepPJ: z.string().optional(),
   enderecoPJ: z.string().optional(),
+  observacoesPJ: z.string().optional().refine((value) => {
+    if (!value) return true; // Campo opcional
+    return value.length <= 1000;
+  }, { message: 'Observações devem ter no máximo 1000 caracteres.' }),
   razaoSocial: z.string().optional(),
   nomeFantasia: z.string().optional(),
 
@@ -686,6 +695,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
       telefoneReferenciaPF: '',
       cepPF: '',
       enderecoPF: '',
+      observacoesPF: '',
 
       // Dados pessoais - Pessoa Jurídica (novos campos separados)
       cnpjPJ: '',
@@ -694,6 +704,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
       telefoneReferenciaPJ: '',
       cepPJ: '',
       enderecoPJ: '',
+      observacoesPJ: '',
 
       // Dados pessoais - Pessoa Física
       nome: '',
@@ -861,6 +872,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
       form.setValue('telefoneReferenciaPF', '');
       form.setValue('cepPF', '');
       form.setValue('enderecoPF', '');
+      form.setValue('observacoesPF', '');
       form.setValue('nome', '');
       form.setValue('dataNascimento', '');
       form.setValue('sexo', '');
@@ -881,6 +893,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
       form.setValue('telefoneReferenciaPJ', '');
       form.setValue('cepPJ', '');
       form.setValue('enderecoPJ', '');
+      form.setValue('observacoesPJ', '');
       form.setValue('razaoSocial', '');
       form.setValue('nomeFantasia', '');
     }
@@ -1676,6 +1689,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                             form.setValue('telefoneReferenciaPF', originalData.telefoneReferenciaPF || '');
                             form.setValue('cepPF', originalData.cepPF || '');
                             form.setValue('enderecoPF', originalData.enderecoPF || '');
+                            form.setValue('observacoesPF', originalData.observacoesPF || '');
                             form.setValue('nome', originalData.nome || '');
                             form.setValue('dataNascimento', originalData.dataNascimento || '');
                             form.setValue('sexo', originalData.sexo || '');
@@ -1705,6 +1719,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                             form.setValue('telefoneReferenciaPJ', originalData.telefoneReferenciaPJ || '');
                             form.setValue('cepPJ', originalData.cepPJ || '');
                             form.setValue('enderecoPJ', originalData.enderecoPJ || '');
+                            form.setValue('observacoesPJ', originalData.observacoesPJ || '');
                             form.setValue('razaoSocial', originalData.razaoSocial || '');
                             form.setValue('nomeFantasia', originalData.nomeFantasia || '');
 
@@ -1715,6 +1730,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                             form.setValue('telefoneReferenciaPF', '');
                             form.setValue('cepPF', '');
                             form.setValue('enderecoPF', '');
+                            form.setValue('observacoesPF', '');
                             form.setValue('nome', '');
                             form.setValue('dataNascimento', '');
                             form.setValue('sexo', '');
@@ -1740,6 +1756,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                             form.setValue('telefoneReferenciaPJ', '');
                             form.setValue('cepPJ', '');
                             form.setValue('enderecoPJ', '');
+                            form.setValue('observacoesPJ', '');
                             form.setValue('razaoSocial', '');
                             form.setValue('nomeFantasia', '');
 
@@ -1987,6 +2004,27 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                     <FormMessage />
                   </FormItem>
                 )}/>
+
+                {/* Campo Observações - Pessoa Jurídica */}
+                <FormField control={form.control} name="observacoesPJ" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Adicione observações específicas desta proposta..."
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        rows={3}
+                        maxLength={1000}
+                        className="resize-y"
+                      />
+                    </FormControl>
+                    <div className="text-xs text-muted-foreground text-right">
+                      {(field.value || '').length}/1000 caracteres
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
               </>}
               {/* Campos comuns */}
               <FormField control={form.control} name="emailPF" render={({ field }) => (
@@ -2209,6 +2247,27 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                             {isLoadingCepPF && <span className="text-xs text-muted-foreground">Buscando endereço...</span>}
                           </div>
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+
+                    {/* Campo Observações - Pessoa Física */}
+                    <FormField control={form.control} name="observacoesPF" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Observações</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Adicione observações específicas desta proposta..."
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                            rows={3}
+                            maxLength={1000}
+                            className="resize-y"
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground text-right">
+                          {(field.value || '').length}/1000 caracteres
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}/>
