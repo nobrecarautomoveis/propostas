@@ -62,7 +62,7 @@ export function ProposalList() {
                     userId: currentUser?._id as Id<"users">,
                     ...data
                 });
-                
+
                 toast({
                     title: "Proposta Atualizada",
                     description: "A proposta foi atualizada com sucesso."
@@ -94,6 +94,47 @@ export function ProposalList() {
     const handleEditClick = (proposal: Proposal) => {
         setEditingProposal(proposal);
         setIsDialogOpen(true);
+    }
+
+    // Função para converter Proposal para ProposalFormData
+    const convertProposalToFormData = (proposal: Proposal): ProposalFormData => {
+        const { _id, proposalNumber, dateAdded, salespersonId, ...formData } = proposal as any;
+        return {
+            ...formData,
+            // Garantir que campos opcionais tenham valores padrão adequados
+            plate: formData.plate || '',
+            bodywork: formData.bodywork || '',
+            version: formData.version || '',
+            state: formData.state || '',
+            valorFinanciar: formData.valorFinanciar || '',
+
+            // Dados pessoais - garantir valores padrão
+            cpfCnpj: formData.cpfCnpj || '',
+            email: formData.email || '',
+            telefonePessoal: formData.telefonePessoal || '',
+            telefoneReferencia: formData.telefoneReferencia || '',
+            endereco: formData.endereco || '',
+
+            // Pessoa física
+            nome: formData.nome || '',
+            dataNascimento: formData.dataNascimento || '',
+            sexo: formData.sexo || '',
+            nomeMae: formData.nomeMae || '',
+            nomePai: formData.nomePai || '',
+            rg: formData.rg || '',
+            dataEmissaoRg: formData.dataEmissaoRg || '',
+            orgaoExpedidor: formData.orgaoExpedidor || '',
+            naturalidade: formData.naturalidade || '',
+            estadoCivil: formData.estadoCivil || '',
+            possuiCnh: formData.possuiCnh || false,
+
+            // Pessoa jurídica
+            razaoSocial: formData.razaoSocial || '',
+            nomeFantasia: formData.nomeFantasia || '',
+
+            // Tipo de pessoa
+            tipoPessoa: formData.tipoPessoa || 'fisica',
+        } as ProposalFormData;
     }
     
     const handleNewClick = () => {
@@ -224,7 +265,7 @@ export function ProposalList() {
                         <TableHead>Tipo de Proposta</TableHead>
                         <TableHead>Marca/Modelo</TableHead>
                         <TableHead className="hidden md:table-cell">Ano</TableHead>
-                        <TableHead className="hidden md:table-cell">Valor</TableHead>
+                        <TableHead className="hidden md:table-cell">Valor a Financiar</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead><span className="sr-only">Ações</span></TableHead>
                       </TableRow>
@@ -240,7 +281,7 @@ export function ProposalList() {
                                         <div className="font-medium">{proposal.brandName || proposal.brand} / {proposal.modelName || proposal.model}</div>
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell">{typeof proposal.modelYear === 'string' && proposal.modelYear.includes('-') ? proposal.modelYear.split('-')[0] : proposal.modelYear}</TableCell>
-                                    <TableCell className="hidden md:table-cell">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(proposal.value)}</TableCell>
+                                    <TableCell className="hidden md:table-cell">{proposal.valorFinanciar || 'N/A'}</TableCell>
                                     <TableCell><Badge variant={statusVariant[proposal.status] || 'outline'}>{proposal.status}</Badge></TableCell>
                                     <TableCell>
                                         <DropdownMenu>
@@ -293,10 +334,13 @@ export function ProposalList() {
         </AlertDialog>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-                <DialogTitle>{editingProposal ? 'Editar Proposta' : 'Nova Proposta de Veículo'}</DialogTitle>
+                <DialogTitle>{editingProposal ? 'Editar Proposta' : 'Nova Proposta'}</DialogTitle>
                 <DialogDescription>{editingProposal ? 'Atualize os dados da proposta abaixo.' : 'Preencha os campos abaixo para criar uma nova proposta.'}</DialogDescription>
             </DialogHeader>
-            <ProposalForm onSubmit={handleFormSubmit} initialData={editingProposal || undefined} />
+            <ProposalForm
+                onSubmit={handleFormSubmit}
+                initialData={editingProposal ? convertProposalToFormData(editingProposal) : undefined}
+            />
         </DialogContent>
       </Dialog>
     </>

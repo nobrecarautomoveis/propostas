@@ -59,14 +59,58 @@ export const createProposal = mutation({
     bodywork: v.optional(v.string()),
     modelYear: v.string(), // Alterado de v.number() para v.string()
     manufactureYear: v.number(),
-    version: v.string(),
+    version: v.optional(v.string()),
     fuel: v.string(),
     transmission: v.string(),
     color: v.string(),
     value: v.number(),
+    valorFinanciar: v.optional(v.string()),
     licensingLocation: v.string(),
     status: v.string(),
     state: v.optional(v.string()),
+
+    // Dados pessoais - Campos comuns (antigos - mantidos para compatibilidade)
+    cpfCnpj: v.optional(v.string()),
+    email: v.optional(v.string()),
+    telefonePessoal: v.optional(v.string()),
+    telefoneReferencia: v.optional(v.string()),
+    cep: v.optional(v.string()),
+    endereco: v.optional(v.string()),
+
+    // Dados pessoais - Pessoa Física (campos específicos + comuns separados)
+    cpfPF: v.optional(v.string()),
+    emailPF: v.optional(v.string()),
+    telefonePessoalPF: v.optional(v.string()),
+    telefoneReferenciaPF: v.optional(v.string()),
+    cepPF: v.optional(v.string()),
+    enderecoPF: v.optional(v.string()),
+
+    nome: v.optional(v.string()),
+    dataNascimento: v.optional(v.string()),
+    sexo: v.optional(v.string()),
+    nomeMae: v.optional(v.string()),
+    nomePai: v.optional(v.string()),
+    rg: v.optional(v.string()),
+    dataEmissaoRg: v.optional(v.string()),
+    orgaoExpedidor: v.optional(v.string()),
+    naturalidade: v.optional(v.string()),
+    estadoCivil: v.optional(v.string()),
+    possuiCnh: v.optional(v.boolean()),
+
+    // Dados pessoais - Pessoa Jurídica (campos específicos + comuns separados)
+    cnpjPJ: v.optional(v.string()),
+    emailPJ: v.optional(v.string()),
+    telefonePessoalPJ: v.optional(v.string()),
+    telefoneReferenciaPJ: v.optional(v.string()),
+    cepPJ: v.optional(v.string()),
+    enderecoPJ: v.optional(v.string()),
+
+    razaoSocial: v.optional(v.string()),
+    nomeFantasia: v.optional(v.string()),
+
+    // Tipo de pessoa
+    tipoPessoa: v.optional(v.string()),
+
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
@@ -115,9 +159,53 @@ export const updateProposal = mutation({
     transmission: v.optional(v.string()),
     color: v.optional(v.string()),
     value: v.optional(v.number()),
+    valorFinanciar: v.optional(v.string()),
     licensingLocation: v.optional(v.string()),
     status: v.optional(v.string()),
-    state: v.optional(v.string()), // Adicionar esta linha
+    state: v.optional(v.string()),
+
+    // Dados pessoais - Campos comuns (antigos - mantidos para compatibilidade)
+    cpfCnpj: v.optional(v.string()),
+    email: v.optional(v.string()),
+    telefonePessoal: v.optional(v.string()),
+    telefoneReferencia: v.optional(v.string()),
+    cep: v.optional(v.string()),
+    endereco: v.optional(v.string()),
+
+    // Dados pessoais - Pessoa Física (campos específicos + comuns separados)
+    cpfPF: v.optional(v.string()),
+    emailPF: v.optional(v.string()),
+    telefonePessoalPF: v.optional(v.string()),
+    telefoneReferenciaPF: v.optional(v.string()),
+    cepPF: v.optional(v.string()),
+    enderecoPF: v.optional(v.string()),
+
+    nome: v.optional(v.string()),
+    dataNascimento: v.optional(v.string()),
+    sexo: v.optional(v.string()),
+    nomeMae: v.optional(v.string()),
+    nomePai: v.optional(v.string()),
+    rg: v.optional(v.string()),
+    dataEmissaoRg: v.optional(v.string()),
+    orgaoExpedidor: v.optional(v.string()),
+    naturalidade: v.optional(v.string()),
+    estadoCivil: v.optional(v.string()),
+    possuiCnh: v.optional(v.boolean()),
+
+    // Dados pessoais - Pessoa Jurídica (campos específicos + comuns separados)
+    cnpjPJ: v.optional(v.string()),
+    emailPJ: v.optional(v.string()),
+    telefonePessoalPJ: v.optional(v.string()),
+    telefoneReferenciaPJ: v.optional(v.string()),
+    cepPJ: v.optional(v.string()),
+    enderecoPJ: v.optional(v.string()),
+
+    razaoSocial: v.optional(v.string()),
+    nomeFantasia: v.optional(v.string()),
+
+    // Tipo de pessoa
+    tipoPessoa: v.optional(v.string()),
+
     userId: v.id("users"), // ID do usuário que está atualizando a proposta
   },
   handler: async (ctx, args) => {

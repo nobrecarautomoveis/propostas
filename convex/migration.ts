@@ -59,3 +59,47 @@ export const migrateProposalsWithNames = action({
     return { message: `Migração concluída. ${updatedCount} propostas atualizadas.` };
   },
 });
+
+// Action para remover campos antigos obsoletos do banco de dados
+export const removeOldFields = action({
+  args: {},
+  handler: async (ctx) => {
+    // Busca todas as propostas
+    const proposals = await ctx.runQuery(internal.proposals.getAllProposalsInternal);
+
+    let updatedCount = 0;
+    const fieldsToRemove = ['cpfCnpj', 'email', 'telefonePessoal', 'telefoneReferencia', 'cep', 'endereco', 'state'];
+
+    for (const proposal of proposals) {
+      try {
+        // Verifica se a proposta tem algum dos campos antigos
+        const hasOldFields = fieldsToRemove.some(field =>
+          proposal.hasOwnProperty(field) && proposal[field as keyof typeof proposal] !== undefined
+        );
+
+        if (hasOldFields) {
+          // Remove os campos antigos usando patch com undefined
+          const updateData: any = {};
+          fieldsToRemove.forEach(field => {
+            if (proposal.hasOwnProperty(field)) {
+              updateData[field] = undefined;
+            }
+          });
+
+          await ctx.db.patch(proposal._id, updateData);
+          updatedCount++;
+          console.log(`Removidos campos antigos da proposta ${proposal.proposalNumber}`);
+        }
+
+      } catch (error) {
+        console.error(`Erro ao processar proposta ${proposal.proposalNumber}:`, error);
+      }
+    }
+
+    return {
+      message: `Limpeza concluída. ${updatedCount} propostas tiveram campos antigos removidos.`,
+      fieldsRemoved: fieldsToRemove,
+      totalProposals: proposals.length
+    };
+  },
+});

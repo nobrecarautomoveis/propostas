@@ -6,38 +6,390 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Switch } from '@/components/ui/switch';
+
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { fetchBrands, fetchModels, fetchYears, fetchVehicleDetails, Brand, Model, Year, VehicleDetails } from '@/lib/utils';
+import { fetchBrands, fetchModels, fetchYears, fetchVehicleDetails, testFipeConnection, Brand, Model, Year, VehicleDetails } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Terminal } from 'lucide-react';
 
+// Função auxiliar para validação de RG
+const validateRG = (rg: string): boolean => {
+  if (!rg || rg.trim() === '') return true; // Campo opcional
+
+  const rgLimpo = rg.replace(/\D/g, '');
+
+  // Verifica comprimento básico
+  if (rgLimpo.length < 5 || rgLimpo.length > 14) return false;
+
+  // Verifica se não são todos dígitos iguais
+  if (/^(\d)\1+$/.test(rgLimpo)) return false;
+
+  // Validações específicas por estado
+  switch (rgLimpo.length) {
+    case 8: // Alguns estados como RJ
+      return true; // Aceita formato básico
+
+    case 9: // São Paulo (SP) - XX.XXX.XXX-X
+      return validateRGSaoPaulo(rgLimpo);
+
+    case 10: // Minas Gerais (MG) - XX.XXX.XXX-XX
+      return validateRGMinasGerais(rgLimpo);
+
+    case 11: // Rio de Janeiro (RJ) - XX.XXX.XXX-XX
+      return true; // Aceita formato básico
+
+    default:
+      return true; // Para outros formatos, aceita se passou nas validações básicas
+  }
+};
+
+// Validação específica para RG de São Paulo
+const validateRGSaoPaulo = (rg: string): boolean => {
+  const digitos = rg.substring(0, 8);
+  const digitoVerificador = parseInt(rg.substring(8, 9));
+
+  let soma = 0;
+  for (let i = 0; i < 8; i++) {
+    soma += parseInt(digitos.charAt(i)) * (2 + i);
+  }
+
+  const resto = soma % 11;
+  const digitoCalculado = resto < 2 ? 0 : 11 - resto;
+
+  return digitoCalculado === digitoVerificador;
+};
+
+// Validação específica para RG de Minas Gerais
+const validateRGMinasGerais = (rg: string): boolean => {
+  const digitos = rg.substring(0, 8);
+  const digitosVerificadores = rg.substring(8, 10);
+
+  let soma = 0;
+  for (let i = 0; i < 8; i++) {
+    soma += parseInt(digitos.charAt(i)) * (i + 1);
+  }
+
+  const primeiroDigito = soma % 11;
+  const segundoDigito = (soma + primeiroDigito) % 11;
+
+  const digitosCalculados = String(primeiroDigito).padStart(1, '0') + String(segundoDigito).padStart(1, '0');
+
+  return digitosCalculados === digitosVerificadores;
+};
+
+// Funções de validação de CPF e CNPJ
+const validarCPF = (cpf: string): boolean => {
+  const cpfLimpo = cpf.replace(/\D/g, '');
+
+  if (cpfLimpo.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpfLimpo)) return false; // CPFs com todos os dígitos iguais
+
+  let soma = 0;
+  for (let i = 0; i < 9; i++) {
+    soma += parseInt(cpfLimpo.charAt(i)) * (10 - i);
+  }
+  let resto = 11 - (soma % 11);
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpfLimpo.charAt(9))) return false;
+
+  soma = 0;
+  for (let i = 0; i < 10; i++) {
+    soma += parseInt(cpfLimpo.charAt(i)) * (11 - i);
+  }
+  resto = 11 - (soma % 11);
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpfLimpo.charAt(10))) return false;
+
+  return true;
+};
+
+const validarCNPJ = (cnpj: string): boolean => {
+  const cnpjLimpo = cnpj.replace(/\D/g, '');
+
+  if (cnpjLimpo.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(cnpjLimpo)) return false; // CNPJs com todos os dígitos iguais
+
+  let tamanho = cnpjLimpo.length - 2;
+  let numeros = cnpjLimpo.substring(0, tamanho);
+  let digitos = cnpjLimpo.substring(tamanho);
+  let soma = 0;
+  let pos = tamanho - 7;
+
+  for (let i = tamanho; i >= 1; i--) {
+    soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+
+  let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+  if (resultado !== parseInt(digitos.charAt(0))) return false;
+
+  tamanho = tamanho + 1;
+  numeros = cnpjLimpo.substring(0, tamanho);
+  soma = 0;
+  pos = tamanho - 7;
+
+  for (let i = tamanho; i >= 1; i--) {
+    soma += parseInt(numeros.charAt(tamanho - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+
+  resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+  if (resultado !== parseInt(digitos.charAt(1))) return false;
+
+  return true;
+};
+
 const formSchema = z.object({
-  proposalType: z.string({ required_error: "Selecione o tipo de proposta." }),
-  vehicleType: z.string({ required_error: "Selecione o tipo de veículo." }),
-  isFinanced: z.boolean().default(false),
+  // Dados do veículo - OBRIGATÓRIOS
+  proposalType: z.string({ required_error: "Selecione o tipo de proposta." }).min(1, "Selecione o tipo de proposta."),
+  vehicleType: z.string({ required_error: "Selecione o tipo de veículo." }).min(1, "Selecione o tipo de veículo."),
+  isFinanced: z.boolean().optional(),
   vehicleCondition: z.enum(["new", "used"], { required_error: "Selecione a condição." }),
-  plate: z.string().optional(),
-  brand: z.string({ required_error: "A marca é obrigatória." }),
+  plate: z.string().optional(), // Será validado condicionalmente no superRefine
+  brand: z.string({ required_error: "A marca é obrigatória." }).min(1, "A marca é obrigatória."),
   brandName: z.string().optional(),
-  model: z.string({ required_error: "O modelo é obrigatório." }),
+  model: z.string({ required_error: "O modelo é obrigatório." }).min(1, "O modelo é obrigatório."),
   modelName: z.string().optional(),
   bodywork: z.string().optional(),
-  modelYear: z.string({ required_error: "O ano do modelo é obrigatório." }),
-  manufactureYear: z.coerce.number({ required_error: "O ano de fabricação é obrigatório." }),
+  modelYear: z.string({ required_error: "O ano do modelo é obrigatório." }).min(1, "O ano do modelo é obrigatório."),
+  manufactureYear: z.coerce.number({ required_error: "O ano de fabricação é obrigatório." }).min(1900, "Selecione o ano de fabricação."),
   version: z.string().optional(),
-  fuel: z.string({ required_error: "Selecione o combustível." }),
-  transmission: z.string({ required_error: "Selecione a transmissão." }),
+  fuel: z.string({ required_error: "Selecione o combustível." }).min(1, "Selecione o combustível."),
+  transmission: z.string({ required_error: "Selecione a transmissão." }).min(1, "Selecione a transmissão."),
   color: z.string({ required_error: "A cor é obrigatória." }).min(2, "Mínimo 2 caracteres."),
   value: z.coerce.number({ required_error: "O valor é obrigatório." }).positive("O valor deve ser positivo."),
-  licensingLocation: z.string({ required_error: "Selecione o estado." }),
+  valorFinanciar: z.string({ required_error: "O valor a financiar é obrigatório." }).min(1, "Informe o valor a financiar."),
+  licensingLocation: z.string({ required_error: "Selecione o estado." }).min(1, "Selecione o estado."),
   status: z.enum(['Em Análise', 'Aprovada', 'Recusada'], { required_error: "Selecione o status da proposta." }),
-  state: z.string().optional(), // Adding state to schema
+
+  // Dados pessoais - Pessoa Física (campos específicos + comuns)
+  cpfPF: z.string().optional().refine((value) => {
+    if (!value) return true; // Se vazio, deixa a validação condicional cuidar
+    const raw = value.replace(/\D/g, '');
+    if (raw.length !== 11) return false;
+    if (/^(\d)\1+$/.test(raw)) return false;
+    let sum = 0;
+    let rest;
+    for (let i = 1; i <= 9; i++) sum += parseInt(raw.substring(i-1, i)) * (11 - i);
+    rest = (sum * 10) % 11;
+    if ((rest === 10) || (rest === 11)) rest = 0;
+    if (rest !== parseInt(raw.substring(9, 10))) return false;
+    sum = 0;
+    for (let i = 1; i <= 10; i++) sum += parseInt(raw.substring(i-1, i)) * (12 - i);
+    rest = (sum * 10) % 11;
+    if ((rest === 10) || (rest === 11)) rest = 0;
+    if (rest !== parseInt(raw.substring(10, 11))) return false;
+    return true;
+  }, { message: 'CPF inválido.' }),
+  emailPF: z.string().optional().refine((value) => {
+    if (!value) return true; // Se vazio, não valida formato
+    return z.string().email().safeParse(value).success;
+  }, { message: 'E-mail inválido.' }),
+  telefonePessoalPF: z.string().optional(),
+  telefoneReferenciaPF: z.string().optional(),
+  cepPF: z.string().optional(),
+  enderecoPF: z.string().optional(),
+
+  // Dados pessoais - Pessoa Física (serão validados condicionalmente)
+  nome: z.string().optional(),
+  dataNascimento: z.string().optional(),
+  sexo: z.string().optional(),
+  nomeMae: z.string().optional(),
+  nomePai: z.string().optional(),
+  rg: z.string().optional().refine((value) => {
+    if (!value) return true; // Se vazio, deixa a validação condicional cuidar
+    return validateRG(value);
+  }, {
+    message: 'RG inválido. Verifique o formato e dígitos verificadores.'
+  }),
+  dataEmissaoRg: z.string().optional(),
+  orgaoExpedidor: z.string().optional(),
+  naturalidade: z.string().optional(),
+  estadoCivil: z.string().optional(),
+  possuiCnh: z.boolean().optional(),
+
+  // Dados pessoais - Pessoa Jurídica (campos específicos + comuns)
+  cnpjPJ: z.string().optional().refine((value) => {
+    if (!value) return true; // Se vazio, deixa a validação condicional cuidar
+    const raw = value.replace(/\D/g, '');
+    if (raw.length !== 14) return false;
+    if (/^(\d)\1+$/.test(raw)) return false;
+    let length = raw.length - 2;
+    let numbers = raw.substring(0, length);
+    let digits = raw.substring(length);
+    let sum = 0;
+    let pos = length - 7;
+    for (let i = length; i >= 1; i--) {
+      sum += parseInt(numbers.charAt(length - i)) * pos--;
+      if (pos < 2) pos = 9;
+    }
+    let result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+    if (result !== parseInt(digits.charAt(0))) return false;
+    length = length + 1;
+    numbers = raw.substring(0, length);
+    sum = 0;
+    pos = length - 7;
+    for (let i = length; i >= 1; i--) {
+      sum += parseInt(numbers.charAt(length - i)) * pos--;
+      if (pos < 2) pos = 9;
+    }
+    result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+    if (result !== parseInt(digits.charAt(1))) return false;
+    return true;
+  }, { message: 'CNPJ inválido.' }),
+  emailPJ: z.string().optional().refine((value) => {
+    if (!value) return true; // Se vazio, não valida formato
+    return z.string().email().safeParse(value).success;
+  }, { message: 'E-mail inválido.' }),
+  telefonePessoalPJ: z.string().optional(),
+  telefoneReferenciaPJ: z.string().optional(),
+  cepPJ: z.string().optional(),
+  enderecoPJ: z.string().optional(),
+  razaoSocial: z.string().optional(),
+  nomeFantasia: z.string().optional(),
+
+
+
+  // Campo para controlar tipo de pessoa
+  tipoPessoa: z.enum(['fisica', 'juridica']).default('fisica'),
 }).superRefine((data, ctx) => {
+    // Validações adicionais dos dados do veículo
+    if (!data.proposalType || data.proposalType.trim() === '') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['proposalType'],
+            message: 'Selecione o tipo de proposta.',
+        });
+    }
+
+    if (!data.vehicleType || data.vehicleType.trim() === '') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['vehicleType'],
+            message: 'Selecione o tipo de veículo.',
+        });
+    }
+
+    if (data.isFinanced === undefined || data.isFinanced === null) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['isFinanced'],
+            message: 'Selecione se o veículo é financiado.',
+        });
+    }
+
+    if (!data.vehicleCondition) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['vehicleCondition'],
+            message: 'Selecione a condição do veículo.',
+        });
+    }
+
+    if (!data.value || data.value <= 0) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['value'],
+            message: 'O valor é obrigatório.',
+        });
+    }
+
+    if (!data.status) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['status'],
+            message: 'Selecione o status da proposta.',
+        });
+    }
+
+    if (!data.brand || data.brand.trim() === '') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['brand'],
+            message: 'A marca é obrigatória.',
+        });
+    }
+
+    if (!data.model || data.model.trim() === '') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['model'],
+            message: 'O modelo é obrigatório.',
+        });
+    }
+
+    if (!data.modelYear || data.modelYear.trim() === '') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['modelYear'],
+            message: 'O ano do modelo é obrigatório.',
+        });
+    }
+
+    if (!data.manufactureYear || data.manufactureYear === 0 || data.manufactureYear < 1900) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['manufactureYear'],
+            message: 'O ano de fabricação é obrigatório.',
+        });
+    }
+
+    if (!data.fuel || data.fuel.trim() === '') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['fuel'],
+            message: 'Selecione o combustível.',
+        });
+    }
+
+    if (!data.transmission || data.transmission.trim() === '') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['transmission'],
+            message: 'Selecione a transmissão.',
+        });
+    }
+
+    if (!data.color || data.color.trim() === '') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['color'],
+            message: 'A cor é obrigatória.',
+        });
+    }
+
+    if (!data.value || data.value <= 0) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['value'],
+            message: 'O valor é obrigatório.',
+        });
+    }
+
+    if (!data.valorFinanciar || data.valorFinanciar.trim() === '') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['valorFinanciar'],
+            message: 'O valor a financiar é obrigatório.',
+        });
+    }
+
+    if (!data.licensingLocation || data.licensingLocation.trim() === '') {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['licensingLocation'],
+            message: 'Selecione o estado.',
+        });
+    }
+
+    // Validação da placa para veículos usados
     if (data.vehicleCondition === 'used' && (!data.plate || data.plate.trim() === '')) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -45,12 +397,207 @@ const formSchema = z.object({
             message: 'A placa é obrigatória para veículos usados.',
         });
     }
+
+    // Validações de campos comuns removidas - serão feitas condicionalmente na validação manual
+
+    // Validações condicionais baseadas no tipo de pessoa
+    if (data.tipoPessoa === 'fisica') {
+        // Campos comuns obrigatórios para Pessoa Física
+        if (!data.cpfPF || data.cpfPF.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['cpfPF'],
+                message: 'CPF é obrigatório.',
+            });
+        }
+        if (!data.emailPF || data.emailPF.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['emailPF'],
+                message: 'E-mail é obrigatório.',
+            });
+        }
+        if (!data.telefonePessoalPF || data.telefonePessoalPF.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['telefonePessoalPF'],
+                message: 'Telefone pessoal é obrigatório.',
+            });
+        }
+        if (!data.telefoneReferenciaPF || data.telefoneReferenciaPF.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['telefoneReferenciaPF'],
+                message: 'Telefone de referência é obrigatório.',
+            });
+        }
+        if (!data.cepPF || data.cepPF.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['cepPF'],
+                message: 'CEP é obrigatório.',
+            });
+        }
+        if (!data.enderecoPF || data.enderecoPF.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['enderecoPF'],
+                message: 'Endereço é obrigatório.',
+            });
+        }
+
+        // Campos específicos de Pessoa Física
+        if (!data.nome || data.nome.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['nome'],
+                message: 'Nome completo é obrigatório.',
+            });
+        }
+        if (!data.dataNascimento || data.dataNascimento.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['dataNascimento'],
+                message: 'Data de nascimento é obrigatória.',
+            });
+        }
+        if (!data.sexo || data.sexo.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['sexo'],
+                message: 'Sexo é obrigatório.',
+            });
+        }
+        if (!data.nomeMae || data.nomeMae.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['nomeMae'],
+                message: 'Nome da mãe é obrigatório.',
+            });
+        }
+        if (!data.nomePai || data.nomePai.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['nomePai'],
+                message: 'Nome do pai é obrigatório.',
+            });
+        }
+        if (!data.rg || data.rg.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['rg'],
+                message: 'RG é obrigatório.',
+            });
+        }
+        if (!data.dataEmissaoRg || data.dataEmissaoRg.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['dataEmissaoRg'],
+                message: 'Data de emissão do RG é obrigatória.',
+            });
+        }
+        if (!data.orgaoExpedidor || data.orgaoExpedidor.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['orgaoExpedidor'],
+                message: 'Órgão expedidor é obrigatório.',
+            });
+        }
+        if (!data.naturalidade || data.naturalidade.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['naturalidade'],
+                message: 'Naturalidade é obrigatória.',
+            });
+        }
+        if (!data.estadoCivil || data.estadoCivil.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['estadoCivil'],
+                message: 'Estado civil é obrigatório.',
+            });
+        }
+        if (data.possuiCnh === undefined || data.possuiCnh === null) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['possuiCnh'],
+                message: 'Informe se possui CNH.',
+            });
+        }
+
+        // Campos de Pessoa Jurídica NÃO são obrigatórios quando é Pessoa Física
+        // (eles ficam opcionais e podem estar vazios)
+
+    } else if (data.tipoPessoa === 'juridica') {
+        // Campos comuns obrigatórios para Pessoa Jurídica
+        if (!data.cnpjPJ || data.cnpjPJ.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['cnpjPJ'],
+                message: 'CNPJ é obrigatório.',
+            });
+        }
+        if (!data.emailPJ || data.emailPJ.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['emailPJ'],
+                message: 'E-mail é obrigatório.',
+            });
+        }
+        if (!data.telefonePessoalPJ || data.telefonePessoalPJ.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['telefonePessoalPJ'],
+                message: 'Telefone comercial é obrigatório.',
+            });
+        }
+        if (!data.telefoneReferenciaPJ || data.telefoneReferenciaPJ.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['telefoneReferenciaPJ'],
+                message: 'Telefone de referência é obrigatório.',
+            });
+        }
+        if (!data.cepPJ || data.cepPJ.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['cepPJ'],
+                message: 'CEP é obrigatório.',
+            });
+        }
+        if (!data.enderecoPJ || data.enderecoPJ.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['enderecoPJ'],
+                message: 'Endereço é obrigatório.',
+            });
+        }
+
+        // Campos específicos de Pessoa Jurídica
+        if (!data.razaoSocial || data.razaoSocial.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['razaoSocial'],
+                message: 'Razão social é obrigatória.',
+            });
+        }
+        if (!data.nomeFantasia || data.nomeFantasia.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['nomeFantasia'],
+                message: 'Nome fantasia é obrigatório.',
+            });
+        }
+
+        // Campos de Pessoa Física NÃO são obrigatórios quando é Pessoa Jurídica
+        // (eles ficam opcionais e podem estar vazios)
+    }
 });
 
 export type ProposalFormData = z.infer<typeof formSchema>;
 
 type ProposalFormProps = {
-  onSubmit: (data: ProposalFormData) => void;
+  onSubmit: (data: ProposalFormData) => Promise<void>;
   initialData?: ProposalFormData;
 };
 
@@ -67,9 +614,16 @@ const brazilianStates = [
 ];
 
 export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
+  const [tabValue, setTabValue] = useState<'veiculo' | 'pessoais'>('veiculo');
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currencyValue, setCurrencyValue] = useState('');
+  const [tipoPessoa, setTipoPessoa] = useState<'fisica' | 'juridica'>('fisica');
+  const [isLoadingCepPF, setIsLoadingCepPF] = useState(false);
+  const [isLoadingCepPJ, setIsLoadingCepPJ] = useState(false);
+  const [originalData, setOriginalData] = useState<any>(null);
+  const [showTypeChangeWarning, setShowTypeChangeWarning] = useState(false);
+  const [pendingTypeChange, setPendingTypeChange] = useState<'fisica' | 'juridica' | null>(null);
 
   // FIPE API States
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -83,32 +637,101 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
   const [yearCodeFipe, setYearCodeFipe] = useState<string | null>(null);
   const [brandName, setBrandName] = useState<string | null>(null);
   const [modelName, setModelName] = useState<string | null>(null);
+  const [fipeApiError, setFipeApiError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
+      // Dados do veículo
       proposalType: '',
       vehicleType: '',
-      isFinanced: false,
-      vehicleCondition: 'new',
+      isFinanced: undefined,
+      vehicleCondition: undefined,
       plate: '',
       brand: '',
       brandName: '',
       model: '',
       modelName: '',
       bodywork: '',
-      modelYear: new Date().getFullYear().toString(), // Converter para string
-      manufactureYear: new Date().getFullYear(), // Manter como número para o schema
+      modelYear: '',
+      manufactureYear: undefined,
       version: '',
       fuel: '',
       transmission: '',
       color: '',
-      value: 0,
+      value: undefined,
+      valorFinanciar: '',
       licensingLocation: '',
-      status: 'Em Análise',
-      state: '',
+      status: undefined,
+
+
+
+      // Dados pessoais - Pessoa Física (novos campos separados)
+      cpfPF: '',
+      emailPF: '',
+      telefonePessoalPF: '',
+      telefoneReferenciaPF: '',
+      cepPF: '',
+      enderecoPF: '',
+
+      // Dados pessoais - Pessoa Jurídica (novos campos separados)
+      cnpjPJ: '',
+      emailPJ: '',
+      telefonePessoalPJ: '',
+      telefoneReferenciaPJ: '',
+      cepPJ: '',
+      enderecoPJ: '',
+
+      // Dados pessoais - Pessoa Física
+      nome: '',
+      dataNascimento: '',
+      sexo: '',
+      nomeMae: '',
+      nomePai: '',
+      rg: '',
+      dataEmissaoRg: '',
+      orgaoExpedidor: '',
+      naturalidade: '',
+      estadoCivil: '',
+      possuiCnh: undefined,
+
+      // Dados pessoais - Pessoa Jurídica
+      razaoSocial: '',
+      nomeFantasia: '',
+
+      // Tipo de pessoa
+      tipoPessoa: 'fisica',
     },
   });
+
+
+
+  // Função melhorada para formatar telefone (funciona com backspace)
+  const formatPhone = (value: string) => {
+    if (!value) return '';
+
+    // Remove todos os caracteres não numéricos
+    const raw = value.replace(/\D/g, '');
+
+    // Se não há números, retorna string vazia
+    if (raw.length === 0) return '';
+
+    // Limita a 11 dígitos
+    const limited = raw.substring(0, 11);
+
+    // Aplica a máscara baseada no comprimento
+    if (limited.length <= 2) {
+      return `(${limited}`;
+    } else if (limited.length <= 3) {
+      return `(${limited.substring(0, 2)}) ${limited.substring(2)}`;
+    } else if (limited.length <= 7) {
+      return `(${limited.substring(0, 2)}) ${limited.substring(2, 3)} ${limited.substring(3)}`;
+    } else {
+      return `(${limited.substring(0, 2)}) ${limited.substring(2, 3)} ${limited.substring(3, 7)}-${limited.substring(7)}`;
+    }
+  };
+
+
 
   const formatCurrency = (value: number) => {
      return new Intl.NumberFormat('pt-BR', {
@@ -117,23 +740,97 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
     }).format(value);
   }
 
+  // Função para verificar se há erros de validação visíveis
+  const hasValidationErrors = () => {
+    const errors = form.formState.errors;
+    return Object.keys(errors).length > 0;
+  };
+
+  // Função para confirmar mudança de tipo de pessoa
+  const confirmTypeChange = () => {
+    if (!pendingTypeChange) return;
+
+    const previousValue = form.getValues('tipoPessoa');
+    form.setValue('tipoPessoa', pendingTypeChange);
+    setTipoPessoa(pendingTypeChange);
+
+    // Limpar erros de validação
+    form.clearErrors();
+
+    // LÓGICA INTELIGENTE: Limpar apenas campos do tipo anterior
+    if (previousValue === 'fisica') {
+      // Estava em PF, mudando para PJ: limpar apenas campos de PF
+      form.setValue('cpfPF', '');
+      form.setValue('emailPF', '');
+      form.setValue('telefonePessoalPF', '');
+      form.setValue('telefoneReferenciaPF', '');
+      form.setValue('cepPF', '');
+      form.setValue('enderecoPF', '');
+      form.setValue('nome', '');
+      form.setValue('dataNascimento', '');
+      form.setValue('sexo', '');
+      form.setValue('nomeMae', '');
+      form.setValue('nomePai', '');
+      form.setValue('rg', '');
+      form.setValue('dataEmissaoRg', '');
+      form.setValue('orgaoExpedidor', '');
+      form.setValue('naturalidade', '');
+      form.setValue('estadoCivil', '');
+      form.setValue('possuiCnh', false);
+
+    } else if (previousValue === 'juridica') {
+      // Estava em PJ, mudando para PF: limpar apenas campos de PJ
+      form.setValue('cnpjPJ', '');
+      form.setValue('emailPJ', '');
+      form.setValue('telefonePessoalPJ', '');
+      form.setValue('telefoneReferenciaPJ', '');
+      form.setValue('cepPJ', '');
+      form.setValue('enderecoPJ', '');
+      form.setValue('razaoSocial', '');
+      form.setValue('nomeFantasia', '');
+    }
+
+
+
+    setShowTypeChangeWarning(false);
+    setPendingTypeChange(null);
+  };
+
+  // Função para cancelar mudança de tipo de pessoa
+  const cancelTypeChange = () => {
+    setShowTypeChangeWarning(false);
+    setPendingTypeChange(null);
+  };
+
   useEffect(() => {
     if (initialData) {
       form.reset(initialData);
+      // Armazenar os dados originais para restauração posterior
+      setOriginalData(initialData);
+
       if (initialData.value) {
         setCurrencyValue(formatCurrency(initialData.value));
       }
       setBrandName(initialData.brandName || null);
       setModelName(initialData.modelName || null);
-      
+
+      // Definir o tipo de pessoa baseado nos dados iniciais
+      if (initialData.tipoPessoa) {
+        setTipoPessoa(initialData.tipoPessoa as 'fisica' | 'juridica');
+
+
+      }
+
+      // O CEP será carregado automaticamente pelo form.reset(initialData)
+
       // Definir yearCodeFipe se temos modelYear nos dados iniciais
       if (initialData.modelYear) {
         setYearCodeFipe(initialData.modelYear);
       }
-      
+
       // Carregar dados da API FIPE se necessário
       if (initialData.vehicleType && initialData.brand) {
-        const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes' };
+        const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes', bus: 'caminhoes' };
         if (vehicleTypeMap[initialData.vehicleType as keyof typeof vehicleTypeMap]) {
           // Carregar marcas
           fetchBrands(vehicleTypeMap[initialData.vehicleType as keyof typeof vehicleTypeMap])
@@ -144,7 +841,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                 setBrandName(selectedBrand.nome);
               }
             });
-          
+
           // Carregar modelos se temos a marca
           if (initialData.model) {
             fetchModels(vehicleTypeMap[initialData.vehicleType as keyof typeof vehicleTypeMap], initialData.brand)
@@ -156,7 +853,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                 }
               });
           }
-          
+
           // Carregar anos se temos modelo
           if (initialData.model) {
             fetchYears(vehicleTypeMap[initialData.vehicleType as keyof typeof vehicleTypeMap], initialData.brand, initialData.model)
@@ -174,32 +871,59 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
   const modelCode = form.watch('model');
   const yearCode = form.watch('modelYear'); // Changed from manufactureYear
 
+  // Teste de conectividade com API FIPE v2
+  useEffect(() => {
+    testFipeConnection();
+  }, []);
+
+
+
+  // Limpar ano de fabricação quando ano do modelo mudar
+  useEffect(() => {
+    const modelYear = form.watch('modelYear');
+    if (modelYear) {
+      // Limpar o ano de fabricação para forçar nova seleção
+      form.setValue('manufactureYear', undefined);
+    }
+  }, [form.watch('modelYear')]);
+
   // Fetch Brands
   useEffect(() => {
-    if (vehicleType && (vehicleType === 'car' || vehicleType === 'motorcycle' || vehicleType === 'truck')) {
-      const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes' };
+    if (vehicleType && (vehicleType === 'car' || vehicleType === 'motorcycle' || vehicleType === 'truck' || vehicleType === 'bus')) {
+      const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes', bus: 'caminhoes' };
       setIsLoadingBrands(true);
       fetchBrands(vehicleTypeMap[vehicleType as keyof typeof vehicleTypeMap])
-        .then(data => setBrands(data))
-        .catch(err => toast({ title: 'Erro FIPE', description: 'Não foi possível buscar as marcas.', variant: 'destructive' }))
+        .then(data => {
+          setBrands(data);
+          setFipeApiError(null); // Limpar erro se sucesso
+        })
+        .catch(err => {
+          console.error('❌ Erro ao buscar marcas:', err);
+          setFipeApiError(err.message || 'Erro ao conectar com a API FIPE');
+          toast({
+            title: 'Erro FIPE',
+            description: `Não foi possível buscar as marcas. ${err.message || 'Erro desconhecido'}`,
+            variant: 'destructive'
+          });
+        })
         .finally(() => setIsLoadingBrands(false));
       
       // Só limpar os campos se não estivermos editando uma proposta existente
       if (!initialData) {
         form.setValue('brand', '');
         form.setValue('model', '');
-        // Removido: form.setValue('manufactureYear', ''); - não limpar o ano de fabricação
+
         setModels([]);
         setYears([]);
         setFipeDetails(null);
       }
     }
-  }, [vehicleType, form, toast, initialData]);
+  }, [vehicleType, toast]);
 
   // Fetch Models
   useEffect(() => {
-    if (brandCode && vehicleType && (vehicleType === 'car' || vehicleType === 'motorcycle' || vehicleType === 'truck')) {
-      const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes' };
+    if (brandCode && vehicleType && (vehicleType === 'car' || vehicleType === 'motorcycle' || vehicleType === 'truck' || vehicleType === 'bus')) {
+      const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes', bus: 'caminhoes' };
       setIsLoadingModels(true);
       fetchModels(vehicleTypeMap[vehicleType as keyof typeof vehicleTypeMap], brandCode)
         .then(data => {
@@ -220,12 +944,12 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
         setModelName(null);
       }
     }
-  }, [brandCode, vehicleType, toast, initialData]);
+  }, [brandCode, vehicleType, toast]);
 
   // Fetch Years
   useEffect(() => {
-    if (modelCode && brandCode && vehicleType && (vehicleType === 'car' || vehicleType === 'motorcycle' || vehicleType === 'truck')) {
-      const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes' };
+    if (modelCode && brandCode && vehicleType && (vehicleType === 'car' || vehicleType === 'motorcycle' || vehicleType === 'truck' || vehicleType === 'bus')) {
+      const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes', bus: 'caminhoes' };
       setIsLoadingYears(true);
       fetchYears(vehicleTypeMap[vehicleType as keyof typeof vehicleTypeMap], brandCode, modelCode)
         .then(data => {
@@ -237,7 +961,14 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
             form.setValue('modelYear', '');
           }
         })
-        .catch(err => toast({ title: 'Erro FIPE', description: 'Não foi possível buscar os anos.', variant: 'destructive' }))
+        .catch(err => {
+          console.error('❌ Erro ao buscar anos:', err);
+          toast({
+            title: 'Erro FIPE',
+            description: `Não foi possível buscar os anos. ${err.message || 'Erro desconhecido'}`,
+            variant: 'destructive'
+          });
+        })
         .finally(() => setIsLoadingYears(false));
       
       // Só limpar fipeDetails se não estivermos editando
@@ -245,12 +976,12 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
         setFipeDetails(null);
       }
     }
-  }, [modelCode, brandCode, vehicleType, form, toast, initialData]);
+  }, [modelCode, brandCode, vehicleType, toast]);
 
   // Fetch FIPE Details
   useEffect(() => {
-    if (yearCodeFipe && modelCode && brandCode && vehicleType && (vehicleType === 'car' || vehicleType === 'motorcycle' || vehicleType === 'truck')) {
-      const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes' };
+    if (yearCodeFipe && modelCode && brandCode && vehicleType && (vehicleType === 'car' || vehicleType === 'motorcycle' || vehicleType === 'truck' || vehicleType === 'bus')) {
+      const vehicleTypeMap = { car: 'carros', motorcycle: 'motos', truck: 'caminhoes', bus: 'caminhoes' };
       setIsLoadingFipe(true);
       fetchVehicleDetails(vehicleTypeMap[vehicleType as keyof typeof vehicleTypeMap], brandCode, modelCode, yearCodeFipe)
         .then(data => setFipeDetails(data))
@@ -268,27 +999,155 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
     return years;
   };
 
+  // Nova função para gerar opções de ano de fabricação baseadas no ano do modelo
+  const generateManufactureYearOptions = () => {
+    const modelYear = form.watch('modelYear');
+    if (!modelYear) return [];
+
+    const modelYearNum = parseInt(modelYear);
+    if (isNaN(modelYearNum)) return [];
+
+    return [
+      { value: modelYearNum - 1, label: String(modelYearNum - 1) }, // Ano do modelo - 1
+      { value: modelYearNum, label: String(modelYearNum) }          // Mesmo ano do modelo
+    ];
+  };
+
+
+  const handleSubmitWithValidation = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validação básica dos campos obrigatórios
+    let hasErrors = false;
+
+    // Validar campos básicos do veículo
+    const requiredFields = [
+      { field: 'proposalType', message: 'Selecione o tipo de proposta.' },
+      { field: 'vehicleType', message: 'Selecione o tipo de veículo.' },
+      { field: 'isFinanced', message: 'Selecione se o veículo é financiado.' },
+      { field: 'vehicleCondition', message: 'Selecione a condição do veículo.' },
+      { field: 'brand', message: 'A marca é obrigatória.' },
+      { field: 'model', message: 'O modelo é obrigatório.' },
+      { field: 'modelYear', message: 'O ano do modelo é obrigatório.' },
+      { field: 'fuel', message: 'Selecione o combustível.' },
+      { field: 'transmission', message: 'Selecione a transmissão.' },
+      { field: 'color', message: 'A cor é obrigatória.' },
+      { field: 'value', message: 'O valor é obrigatório.' },
+      { field: 'valorFinanciar', message: 'O valor a financiar é obrigatório.' },
+      { field: 'licensingLocation', message: 'Selecione o local de licenciamento.' },
+      { field: 'status', message: 'O status é obrigatório.' }
+    ];
+
+    // Verificar campos obrigatórios
+    requiredFields.forEach(({ field, message }) => {
+      const value = form.getValues(field as any);
+      if (value === undefined || value === null || value === '' || (typeof value === 'number' && value <= 0)) {
+        form.setError(field as any, { type: 'manual', message });
+        hasErrors = true;
+      }
+    });
+
+    // Validar placa para veículos usados
+    const vehicleCondition = form.getValues('vehicleCondition');
+    const plate = form.getValues('plate');
+    if (vehicleCondition === 'used' && (!plate || plate.trim() === '')) {
+      form.setError('plate', { type: 'manual', message: 'A placa é obrigatória para veículos usados.' });
+      hasErrors = true;
+    }
+
+    // Validar campos de pessoa baseado no tipo
+    const tipoPessoa = form.getValues('tipoPessoa');
+    if (tipoPessoa === 'fisica') {
+      const camposPF = [
+        { field: 'cpfPF', message: 'CPF é obrigatório.' },
+        { field: 'emailPF', message: 'E-mail é obrigatório.' },
+        { field: 'telefonePessoalPF', message: 'Telefone pessoal é obrigatório.' },
+        { field: 'telefoneReferenciaPF', message: 'Telefone de referência é obrigatório.' },
+        { field: 'cepPF', message: 'CEP é obrigatório.' },
+        { field: 'enderecoPF', message: 'Endereço é obrigatório.' },
+        { field: 'nome', message: 'Nome completo é obrigatório.' },
+        { field: 'dataNascimento', message: 'Data de nascimento é obrigatória.' },
+        { field: 'sexo', message: 'Sexo é obrigatório.' },
+        { field: 'nomeMae', message: 'Nome da mãe é obrigatório.' },
+        { field: 'nomePai', message: 'Nome do pai é obrigatório.' },
+        { field: 'rg', message: 'RG é obrigatório.' },
+        { field: 'dataEmissaoRg', message: 'Data de emissão do RG é obrigatória.' },
+        { field: 'orgaoExpedidor', message: 'Órgão expedidor é obrigatório.' },
+        { field: 'naturalidade', message: 'Naturalidade é obrigatória.' },
+        { field: 'estadoCivil', message: 'Estado civil é obrigatório.' },
+        { field: 'possuiCnh', message: 'Informe se possui CNH.' }
+      ];
+
+      camposPF.forEach(({ field, message }) => {
+        const value = form.getValues(field as any);
+        if (value === undefined || value === null || value === '' || (field === 'possuiCnh' && typeof value !== 'boolean')) {
+          form.setError(field as any, { type: 'manual', message });
+          hasErrors = true;
+        }
+      });
+
+    } else if (tipoPessoa === 'juridica') {
+      const camposPJ = [
+        { field: 'cnpjPJ', message: 'CNPJ é obrigatório.' },
+        { field: 'emailPJ', message: 'E-mail é obrigatório.' },
+        { field: 'telefonePessoalPJ', message: 'Telefone comercial é obrigatório.' },
+        { field: 'telefoneReferenciaPJ', message: 'Telefone de referência é obrigatório.' },
+        { field: 'cepPJ', message: 'CEP é obrigatório.' },
+        { field: 'enderecoPJ', message: 'Endereço é obrigatório.' },
+        { field: 'razaoSocial', message: 'Razão social é obrigatória.' },
+        { field: 'nomeFantasia', message: 'Nome fantasia é obrigatório.' }
+      ];
+
+      camposPJ.forEach(({ field, message }) => {
+        const value = form.getValues(field as any);
+        if (value === undefined || value === null || value === '') {
+          form.setError(field as any, { type: 'manual', message });
+          hasErrors = true;
+        }
+      });
+    }
+
+    if (hasErrors) {
+
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos obrigatórios destacados em vermelho.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Se passou na validação, executar o submit normal
+    form.handleSubmit(handleFormSubmit)();
+  };
+
   async function handleFormSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
 
-    // Garantir que modelName e brandName sejam capturados corretamente
-    const selectedModel = models.find(m => String(m.codigo) === values.model);
-    const selectedBrand = brands.find(b => b.codigo === values.brand);
+    try {
+      // Garantir que modelName e brandName sejam capturados corretamente
+      const selectedModel = models.find(m => String(m.codigo) === values.model);
+      const selectedBrand = brands.find(b => b.codigo === values.brand);
 
-    const submissionValues: ProposalFormData = {
-      ...values,
-      brandName: selectedBrand?.nome || brandName || '',
-      modelName: selectedModel?.nome || modelName || '',
-    };
+      const submissionValues: ProposalFormData = {
+        ...values,
+        brandName: selectedBrand?.nome || brandName || '',
+        modelName: selectedModel?.nome || modelName || '',
+      };
 
-    onSubmit(submissionValues);
+      // Aguarda a conclusão da operação
+      await onSubmit(submissionValues);
 
-    toast({
-      title: `Proposta ${initialData ? 'Atualizada' : 'Enviada'}!`,
-      description: `Sua proposta foi ${initialData ? 'atualizada' : 'criada'} com sucesso.`,
-    });
-    
-    setIsSubmitting(false);
+    } catch (error) {
+      console.error('❌ Error in form submission:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao processar a proposta.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -309,9 +1168,27 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
 
   return (
     <>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
+      <TabsList className="mb-4">
+        <TabsTrigger value="veiculo">Dados do Veículo</TabsTrigger>
+        <TabsTrigger value="pessoais">Dados Pessoais</TabsTrigger>
+      </TabsList>
+      <TabsContent value="veiculo">
+        {/* Alerta de erro da API FIPE */}
+        {fipeApiError && (
+          <Alert variant="destructive" className="mb-4">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Problema com API FIPE</AlertTitle>
+            <AlertDescription>
+              {fipeApiError}. Você pode continuar preenchendo manualmente os dados do veículo.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Formulário original completo de Dados do Veículo */}
+        <Form {...form}>
+          <form onSubmit={handleSubmitWithValidation} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField control={form.control} name="proposalType" render={({ field }) => (
                   <FormItem>
                       <FormLabel>Tipo de Proposta</FormLabel>
@@ -338,14 +1215,19 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                   </FormItem>
               )}/>
                <FormField control={form.control} name="isFinanced" render={({ field }) => (
-                <FormItem className="flex flex-col pt-2">
-                    <FormLabel className="mb-2">Veículo já financiado?</FormLabel>
-                    <FormControl>
-                        <div className="flex h-10 items-center rounded-md border border-input bg-background px-3 py-2">
-                            <span className="text-sm mr-auto">{field.value ? 'Sim' : 'Não'}</span>
-                            <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </div>
-                    </FormControl>
+                <FormItem>
+                    <FormLabel>Veículo já financiado?</FormLabel>
+                    <Select onValueChange={(value) => field.onChange(value === 'true')} value={field.value === undefined ? '' : field.value ? 'true' : 'false'}>
+                        <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="false">Não</SelectItem>
+                            <SelectItem value="true">Sim</SelectItem>
+                        </SelectContent>
+                    </Select>
                     <FormMessage />
                 </FormItem>
               )}/>
@@ -353,7 +1235,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                   <FormItem className="space-y-3 pt-2">
                       <FormLabel>Condição do Veículo</FormLabel>
                       <FormControl>
-                          <RadioGroup onValueChange={field.onChange} value={field.value} className="flex space-x-4">
+                          <RadioGroup onValueChange={field.onChange} value={field.value || ''} className="flex space-x-4">
                               <FormItem className="flex items-center space-x-2"><FormControl><RadioGroupItem value="new" /></FormControl><FormLabel className="font-normal">Novo</FormLabel></FormItem>
                               <FormItem className="flex items-center space-x-2"><FormControl><RadioGroupItem value="used" /></FormControl><FormLabel className="font-normal">Usado</FormLabel></FormItem>
                           </RadioGroup>
@@ -435,10 +1317,10 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               <FormField control={form.control} name="manufactureYear" render={({ field }) => (
                   <FormItem>
                       <FormLabel>Ano Fabricação</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(Number(value))} value={String(field.value || '')}>
+                      <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value ? String(field.value) : ''}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecione o ano..." /></SelectTrigger></FormControl>
                           <SelectContent>
-                              {generateYearOptions().map(year => <SelectItem key={year.value} value={String(year.value)}>{year.label}</SelectItem>)}
+                              {generateManufactureYearOptions().map(year => <SelectItem key={year.value} value={String(year.value)}>{year.label}</SelectItem>)}
                           </SelectContent>
                       </Select>
                       <FormMessage />
@@ -485,6 +1367,34 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                   <FormMessage />
                 </FormItem>
               )}/>
+
+              {/* Novo campo: Valor a Financiar */}
+              <FormField control={form.control} name="valorFinanciar" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Valor a Financiar</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="R$ 0,00"
+                      value={field.value || ''}
+                      onChange={e => {
+                        const rawValue = e.target.value.replace(/\D/g, '');
+                        if (!rawValue) {
+                          field.onChange('');
+                          return;
+                        }
+                        const numericValue = parseFloat(rawValue) / 100;
+                        const formattedValue = new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(numericValue);
+                        field.onChange(formattedValue);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}/>
               <FormField control={form.control} name="licensingLocation" render={({ field }) => (
                   <FormItem>
                       <FormLabel>Local de Licenciamento</FormLabel>
@@ -503,7 +1413,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               <FormField control={form.control} name="status" render={({ field }) => (
                   <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecione o status..." /></SelectTrigger></FormControl>
                           <SelectContent><SelectItem value="Em Análise">Em Análise</SelectItem><SelectItem value="Aprovada">Aprovada</SelectItem><SelectItem value="Recusada">Recusada</SelectItem></SelectContent>
                       </Select>
@@ -511,15 +1421,20 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                   </FormItem>
               )}/>
             </div>
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto">
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} 
-                {initialData ? 'Atualizar Proposta' : 'Enviar Proposta'}
-              </Button>
-            </div>
+            {/* O botão de submit foi removido desta aba, agora está apenas em Dados Pessoais */}
+        <div className="flex justify-end mt-6">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full md:w-auto flex items-center gap-2"
+            onClick={() => setTabValue('pessoais')}
+          >
+            <span>Avançar</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14m-7 7 7-7-7-7"/></svg>
+          </Button>
+        </div>
           </form>
         </Form>
-        
         {/* Informações FIPE */}
         {(isLoadingFipe || fipeDetails) && (
           <div className="mt-6">
@@ -535,6 +1450,667 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
             )}
           </div>
         )}
-      </>
-    );
+      </TabsContent>
+      <TabsContent value="pessoais">
+        {/* Formulário de Dados Pessoais com alternância Pessoa Física/Jurídica */}
+        <Form {...form}>
+          <form onSubmit={handleSubmitWithValidation} className="space-y-6">
+            {/* Seletor tipo de pessoa */}
+            <FormField control={form.control} name="tipoPessoa" render={({ field }) => (
+              <FormItem className="mb-4">
+                <FormLabel>Tipo de Pessoa</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    value={field.value}
+                    onValueChange={(value) => {
+                      const previousValue = field.value;
+
+                      // Se estamos editando uma proposta e mudando o tipo, mostrar aviso
+                      if (originalData && previousValue !== value && previousValue && originalData.tipoPessoa !== value) {
+                        setPendingTypeChange(value as 'fisica' | 'juridica');
+                        setShowTypeChangeWarning(true);
+                        return; // Não aplicar a mudança ainda
+                      }
+
+                      // Se há erros de validação visíveis e estamos mudando o tipo, mostrar aviso
+                      if (hasValidationErrors() && previousValue !== value && previousValue) {
+                        setPendingTypeChange(value as 'fisica' | 'juridica');
+                        setShowTypeChangeWarning(true);
+                        return; // Não aplicar a mudança ainda
+                      }
+
+                      // Aplicar mudança normalmente
+                      field.onChange(value);
+                      setTipoPessoa(value as 'fisica' | 'juridica');
+
+                      // Só processar mudanças se realmente houve alteração
+                      if (previousValue !== value && previousValue) {
+
+                        if (originalData && originalData.tipoPessoa === value) {
+                          // Se estamos voltando para o tipo original, restaurar os dados originais
+                          if (value === 'fisica') {
+                            // Restaurar dados de pessoa física (apenas campos novos)
+                            form.setValue('cpfPF', originalData.cpfPF || '');
+                            form.setValue('emailPF', originalData.emailPF || '');
+                            form.setValue('telefonePessoalPF', originalData.telefonePessoalPF || '');
+                            form.setValue('telefoneReferenciaPF', originalData.telefoneReferenciaPF || '');
+                            form.setValue('cepPF', originalData.cepPF || '');
+                            form.setValue('enderecoPF', originalData.enderecoPF || '');
+                            form.setValue('nome', originalData.nome || '');
+                            form.setValue('dataNascimento', originalData.dataNascimento || '');
+                            form.setValue('sexo', originalData.sexo || '');
+                            form.setValue('nomeMae', originalData.nomeMae || '');
+                            form.setValue('nomePai', originalData.nomePai || '');
+                            form.setValue('rg', originalData.rg || '');
+                            form.setValue('dataEmissaoRg', originalData.dataEmissaoRg || '');
+                            form.setValue('orgaoExpedidor', originalData.orgaoExpedidor || '');
+                            form.setValue('naturalidade', originalData.naturalidade || '');
+                            form.setValue('estadoCivil', originalData.estadoCivil || '');
+                            form.setValue('possuiCnh', originalData.possuiCnh || false);
+
+                            // Limpar campos de pessoa jurídica
+                            form.setValue('cnpjPJ', '');
+                            form.setValue('emailPJ', '');
+                            form.setValue('telefonePessoalPJ', '');
+                            form.setValue('telefoneReferenciaPJ', '');
+                            form.setValue('cepPJ', '');
+                            form.setValue('enderecoPJ', '');
+                            form.setValue('razaoSocial', '');
+                            form.setValue('nomeFantasia', '');
+                          } else if (value === 'juridica') {
+                            // Restaurar dados de pessoa jurídica (apenas campos novos)
+                            form.setValue('cnpjPJ', originalData.cnpjPJ || '');
+                            form.setValue('emailPJ', originalData.emailPJ || '');
+                            form.setValue('telefonePessoalPJ', originalData.telefonePessoalPJ || '');
+                            form.setValue('telefoneReferenciaPJ', originalData.telefoneReferenciaPJ || '');
+                            form.setValue('cepPJ', originalData.cepPJ || '');
+                            form.setValue('enderecoPJ', originalData.enderecoPJ || '');
+                            form.setValue('razaoSocial', originalData.razaoSocial || '');
+                            form.setValue('nomeFantasia', originalData.nomeFantasia || '');
+
+                            // Limpar campos de pessoa física
+                            form.setValue('cpfPF', '');
+                            form.setValue('emailPF', '');
+                            form.setValue('telefonePessoalPF', '');
+                            form.setValue('telefoneReferenciaPF', '');
+                            form.setValue('cepPF', '');
+                            form.setValue('enderecoPF', '');
+                            form.setValue('nome', '');
+                            form.setValue('dataNascimento', '');
+                            form.setValue('sexo', '');
+                            form.setValue('nomeMae', '');
+                            form.setValue('nomePai', '');
+                            form.setValue('rg', '');
+                            form.setValue('dataEmissaoRg', '');
+                            form.setValue('orgaoExpedidor', '');
+                            form.setValue('naturalidade', '');
+                            form.setValue('estadoCivil', '');
+                            form.setValue('possuiCnh', false);
+                          }
+                        } else {
+                          // LÓGICA INTELIGENTE: Limpar apenas campos do tipo que NÃO está sendo usado
+                          const currentType = form.getValues('tipoPessoa');
+                          const targetType = value; // valor para o qual estamos mudando
+
+                          if (targetType === 'fisica') {
+                            // Mudando para PF: limpar apenas campos de PJ, manter PF
+                            form.setValue('cnpjPJ', '');
+                            form.setValue('emailPJ', '');
+                            form.setValue('telefonePessoalPJ', '');
+                            form.setValue('telefoneReferenciaPJ', '');
+                            form.setValue('cepPJ', '');
+                            form.setValue('enderecoPJ', '');
+                            form.setValue('razaoSocial', '');
+                            form.setValue('nomeFantasia', '');
+
+                          } else if (targetType === 'juridica') {
+                            // Mudando para PJ: limpar apenas campos de PF, manter PJ
+                            form.setValue('cpfPF', '');
+                            form.setValue('emailPF', '');
+                            form.setValue('telefonePessoalPF', '');
+                            form.setValue('telefoneReferenciaPF', '');
+                            form.setValue('cepPF', '');
+                            form.setValue('enderecoPF', '');
+                            form.setValue('nome', '');
+                            form.setValue('dataNascimento', '');
+                            form.setValue('sexo', '');
+                            form.setValue('nomeMae', '');
+                            form.setValue('nomePai', '');
+                            form.setValue('rg', '');
+                            form.setValue('dataEmissaoRg', '');
+                            form.setValue('orgaoExpedidor', '');
+                            form.setValue('naturalidade', '');
+                            form.setValue('estadoCivil', '');
+                            form.setValue('possuiCnh', false);
+                          }
+
+
+
+                          // Limpar erros do formulário
+                          form.clearErrors();
+                        }
+                      }
+                    }}
+                    className="flex space-x-6"
+                  >
+                    <FormItem className="flex items-center space-x-2">
+                      <FormControl><RadioGroupItem value="fisica" /></FormControl>
+                      <FormLabel className="font-normal">Pessoa Física</FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-2">
+                      <FormControl><RadioGroupItem value="juridica" /></FormControl>
+                      <FormLabel className="font-normal">Pessoa Jurídica</FormLabel>
+                    </FormItem>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}/>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Campos Pessoa Física */}
+              {tipoPessoa === 'fisica' && <>
+                <FormField control={form.control} name="nome" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Completo</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o nome completo" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField control={form.control} name="dataNascimento" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data de Nascimento</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField control={form.control} name="sexo" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sexo</FormLabel>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="masculino">Masculino</SelectItem>
+                          <SelectItem value="feminino">Feminino</SelectItem>
+                          <SelectItem value="outro">Outro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField control={form.control} name="nomeMae" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome da Mãe</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o nome da mãe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField control={form.control} name="nomePai" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome do Pai</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o nome do pai" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+              </>}
+              {/* Campos Pessoa Jurídica */}
+              {tipoPessoa === 'juridica' && <>
+                <FormField control={form.control} name="razaoSocial" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Razão Social</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite a razão social" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField control={form.control} name="nomeFantasia" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Fantasia</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o nome fantasia" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                {/* CNPJ logo após Nome Fantasia */}
+                <FormField control={form.control} name="cnpjPJ" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CNPJ</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Digite o CNPJ"
+                        value={field.value || ''}
+                        onChange={e => {
+                          let value = e.target.value;
+                          // Permite apagar normalmente
+                          const raw = value.replace(/\D/g, '');
+                          let masked = '';
+                          if (raw.length > 0) masked += raw.substring(0,2);
+                          if (raw.length >= 2) masked += '.' + raw.substring(2,5);
+                          if (raw.length >= 5) masked += '.' + raw.substring(5,8);
+                          if (raw.length >= 8) masked += '/' + raw.substring(8,12);
+                          if (raw.length >= 12) masked += '-' + raw.substring(12,14);
+                          // Se o usuário está apagando, não força a máscara
+                          if (value.length < (field.value?.length || 0)) {
+                            field.onChange(value);
+                          } else {
+                            field.onChange(masked);
+                          }
+                        }}
+                        maxLength={18}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField control={form.control} name="emailPJ" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o e-mail" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+
+                {/* Telefones para pessoa jurídica */}
+                <FormField control={form.control} name="telefonePessoalPJ" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone Comercial</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="(00) 0 0000-0000"
+                        value={field.value || ''}
+                        onChange={e => {
+                          const formatted = formatPhone(e.target.value);
+                          field.onChange(formatted);
+                        }}
+                        maxLength={16}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField control={form.control} name="telefoneReferenciaPJ" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone de Referência</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="(00) 0 0000-0000"
+                        value={field.value || ''}
+                        onChange={e => {
+                          const formatted = formatPhone(e.target.value);
+                          field.onChange(formatted);
+                        }}
+                        maxLength={16}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+
+                {/* Endereço - campo comum */}
+                <FormField control={form.control} name="enderecoPJ" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endereço</FormLabel>
+                    <FormControl>
+                      <div className="flex flex-col gap-2">
+                        <Input
+                          placeholder="Digite o CEP"
+                          maxLength={9}
+                          value={form.watch('cepPJ') || ''}
+                          onChange={async (e) => {
+                            const cep = e.target.value.replace(/\D/g, '');
+                            let maskedCep = cep;
+                            if (cep.length > 5) maskedCep = cep.substring(0,5) + '-' + cep.substring(5,8);
+                            form.setValue('cepPJ', maskedCep);
+
+                            if (cep.length === 8) {
+                              setIsLoadingCepPJ(true);
+                              try {
+                                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                                const data = await response.json();
+                                if (!data.erro) {
+                                  const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+                                  form.setValue('enderecoPJ', enderecoCompleto);
+                                } else {
+                                  form.setValue('enderecoPJ', '');
+                                  toast({ title: 'CEP não encontrado', description: 'Verifique o número do CEP.', variant: 'destructive' });
+                                }
+                              } catch {
+                                toast({ title: 'Erro ao buscar CEP', description: 'Não foi possível consultar o CEP.', variant: 'destructive' });
+                              }
+                              setIsLoadingCepPJ(false);
+                            }
+                          }}
+                          className="mb-2"
+                        />
+                        <Input
+                          placeholder="Endereço completo"
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          disabled={isLoadingCepPJ}
+                        />
+                        {isLoadingCepPJ && <span className="text-xs text-muted-foreground">Buscando endereço...</span>}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+              </>}
+              {/* Campos comuns */}
+              <FormField control={form.control} name="emailPF" render={({ field }) => (
+                tipoPessoa === 'fisica' ? (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o e-mail" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                ) : null
+              )}/>
+
+              {/* Telefones apenas para pessoa física */}
+              {tipoPessoa === 'fisica' && <>
+                <FormField control={form.control} name="telefonePessoalPF" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone Pessoal</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="(00) 0 0000-0000"
+                        value={field.value || ''}
+                        onChange={e => {
+                          const formatted = formatPhone(e.target.value);
+                          field.onChange(formatted);
+                        }}
+                        maxLength={16}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField control={form.control} name="telefoneReferenciaPF" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone de Referência</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="(00) 0 0000-0000"
+                        value={field.value || ''}
+                        onChange={e => {
+                          const formatted = formatPhone(e.target.value);
+                          field.onChange(formatted);
+                        }}
+                        maxLength={16}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+              </>}
+
+              {/* RG e campos relacionados apenas para física */}
+              {tipoPessoa === 'fisica' && <>
+                <FormField control={form.control} name="rg" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>RG</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Digite o rg"
+                        value={field.value || ''}
+                        onChange={e => {
+                          let value = e.target.value;
+                          const raw = value.replace(/\D/g, '');
+                          let masked = '';
+
+                          // Aplica máscara flexível baseada no comprimento
+                          if (raw.length > 0) {
+                            masked += raw.substring(0, Math.min(2, raw.length));
+                          }
+                          if (raw.length >= 3) {
+                            masked += '.' + raw.substring(2, Math.min(5, raw.length));
+                          }
+                          if (raw.length >= 6) {
+                            masked += '.' + raw.substring(5, Math.min(8, raw.length));
+                          }
+                          if (raw.length >= 9) {
+                            // Para RGs com 1 dígito verificador (SP) ou 2 dígitos (MG, etc)
+                            const digitosVerificadores = raw.substring(8);
+                            masked += '-' + digitosVerificadores;
+                          }
+
+                          // Se o usuário está apagando, não força a máscara
+                          if (value.length < (field.value?.length || 0)) {
+                            field.onChange(value);
+                          } else {
+                            field.onChange(masked);
+                          }
+                        }}
+                        maxLength={15} // Aumentado para acomodar formatos maiores
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField control={form.control} name="dataEmissaoRg" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data de Emissão RG</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+                <FormField control={form.control} name="orgaoExpedidor" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Órgão Expedidor</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: SSP/SC" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+              </>}
+              {/* CPF/CNPJ sempre visível, máscara dinâmica */}
+              {tipoPessoa === 'fisica' && (
+                <FormField control={form.control} name="cpfPF" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CPF</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Digite o cpf"
+                        value={field.value || ''}
+                        onChange={e => {
+                          let value = e.target.value;
+                          // Permite apagar normalmente
+                          const raw = value.replace(/\D/g, '');
+                          let masked = '';
+                          if (raw.length > 0) masked += raw.substring(0,3);
+                          if (raw.length >= 3) masked += '.' + raw.substring(3,6);
+                          if (raw.length >= 6) masked += '.' + raw.substring(6,9);
+                          if (raw.length >= 9) masked += '-' + raw.substring(9,11);
+                          // Se o usuário está apagando, não força a máscara
+                          if (value.length < (field.value?.length || 0)) {
+                            field.onChange(value);
+                          } else {
+                            field.onChange(masked);
+                          }
+                        }}
+                        maxLength={14}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+              )}
+              <FormField control={form.control} name="naturalidade" render={({ field }) => (
+                tipoPessoa === 'fisica' ? (
+                  <FormItem>
+                    <FormLabel>Naturalidade</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Tijucas - SC" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                ) : null
+              )}/>
+              <FormField control={form.control} name="estadoCivil" render={({ field }) => (
+                tipoPessoa === 'fisica' ? (
+                  <>
+                    <FormItem>
+                      <FormLabel>Estado Civil</FormLabel>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="solteiro">Solteiro(a)</SelectItem>
+                            <SelectItem value="casado">Casado(a)</SelectItem>
+                            <SelectItem value="divorciado">Divorciado(a)</SelectItem>
+                            <SelectItem value="viuvo">Viúvo(a)</SelectItem>
+                            <SelectItem value="outro">Outro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                    {/* Endereço logo após Estado Civil */}
+                    <FormField control={form.control} name="enderecoPF" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Endereço</FormLabel>
+                        <FormControl>
+                          <div className="flex flex-col gap-2">
+                            <Input
+                              placeholder="Digite o CEP"
+                              maxLength={9}
+                              value={form.watch('cepPF') || ''}
+                              onChange={async (e) => {
+                                const cep = e.target.value.replace(/\D/g, '');
+                                let maskedCep = cep;
+                                if (cep.length > 5) maskedCep = cep.substring(0,5) + '-' + cep.substring(5,8);
+                                form.setValue('cepPF', maskedCep);
+
+                                if (cep.length === 8) {
+                                  setIsLoadingCepPF(true);
+                                  try {
+                                    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                                    const data = await response.json();
+                                    if (!data.erro) {
+                                      // Monta endereço completo
+                                      const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+                                      form.setValue('enderecoPF', enderecoCompleto);
+                                    } else {
+                                      form.setValue('enderecoPF', '');
+                                      toast({ title: 'CEP não encontrado', description: 'Verifique o número do CEP.', variant: 'destructive' });
+                                    }
+                                  } catch {
+                                    toast({ title: 'Erro ao buscar CEP', description: 'Não foi possível consultar o CEP.', variant: 'destructive' });
+                                  }
+                                  setIsLoadingCepPF(false);
+                                }
+                              }}
+                              className="mb-2"
+                            />
+                            <Input
+                              placeholder="Endereço completo"
+                              value={field.value || ''}
+                              onChange={field.onChange}
+                              disabled={isLoadingCepPF}
+                            />
+                            {isLoadingCepPF && <span className="text-xs text-muted-foreground">Buscando endereço...</span>}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+                  </>
+                ) : null
+              )}/>
+              <FormField control={form.control} name="possuiCnh" render={({ field }) => (
+                tipoPessoa === 'fisica' ? (
+                  <FormItem>
+                    <FormLabel>Possui CNH?</FormLabel>
+                    <Select onValueChange={(value) => field.onChange(value === 'true')} value={field.value === undefined ? '' : field.value ? 'true' : 'false'}>
+                        <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="false">Não</SelectItem>
+                            <SelectItem value="true">Sim</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                ) : null
+              )}/>
+            </div>
+            <div className="flex flex-col md:flex-row justify-between mt-6 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full md:w-auto flex items-center gap-2"
+                onClick={() => setTabValue('veiculo')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 12H5m7-7-7 7 7 7"/></svg>
+                <span>Voltar</span>
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto">
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {initialData ? 'Atualizar Proposta' : 'Enviar Proposta'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </TabsContent>
+    </Tabs>
+
+    {/* Modal de confirmação para mudança de tipo de pessoa */}
+    <AlertDialog open={showTypeChangeWarning} onOpenChange={setShowTypeChangeWarning}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmar Mudança de Tipo de Pessoa</AlertDialogTitle>
+          <AlertDialogDescription>
+            Você está alterando o tipo de pessoa de{' '}
+            <strong>{form.getValues('tipoPessoa') === 'fisica' ? 'Pessoa Física' : 'Pessoa Jurídica'}</strong>{' '}
+            para{' '}
+            <strong>{pendingTypeChange === 'fisica' ? 'Pessoa Física' : 'Pessoa Jurídica'}</strong>.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="py-4">
+          <p className="text-sm text-muted-foreground mb-3">
+            <strong>⚠️ Atenção:</strong> Esta ação irá:
+          </p>
+          <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 mb-3">
+            <li>Limpar todos os dados pessoais preenchidos</li>
+            <li>Limpar todas as mensagens de erro de validação</li>
+            <li>Alterar permanentemente o tipo da proposta</li>
+            <li>Requerer o preenchimento de novos dados específicos do tipo selecionado</li>
+          </ul>
+          <p className="text-sm text-muted-foreground">
+            Deseja continuar com esta alteração?
+          </p>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={cancelTypeChange}>
+            Cancelar
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={confirmTypeChange}>
+            Sim, Alterar Tipo
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
+  );
   }
