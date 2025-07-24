@@ -67,9 +67,9 @@ const fetchWithRetry = async (url: string, maxRetries: number = 3): Promise<Resp
 
       if (FIPE_TOKEN) {
         headers['X-Subscription-Token'] = FIPE_TOKEN;
-        if (attempt === 1) console.log(`🔑 Usando token de autenticação para: ${url}`);
+        // Log reduzido - só em caso de erro
       } else {
-        if (attempt === 1) console.log(`⚠️ Sem token - usando limite gratuito para: ${url}`);
+        // Log reduzido - só em caso de erro
       }
 
       if (attempt > 1) console.log(`🔄 Tentativa ${attempt}/${maxRetries} para: ${url}`);
@@ -121,6 +121,7 @@ export const testFipeConnection = async (): Promise<boolean> => {
       headers['X-Subscription-Token'] = FIPE_TOKEN;
       console.log('🔑 Testando com token de autenticação...');
     } else {
+      // Log reduzido para evitar spam no console
       console.log('⚠️ Testando sem token (limite gratuito)...');
     }
 

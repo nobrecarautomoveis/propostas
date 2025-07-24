@@ -220,10 +220,10 @@ const formSchema = z.object({
   estadoCivil: z.string().optional(),
   possuiCnh: z.boolean().optional(),
 
-  // Dados profissionais - Pessoa Física (TEMPORARIAMENTE DESABILITADOS)
-  // empresa: z.string().optional(),
-  // cargo: z.string().optional(),
-  // naturezaOcupacao: z.string().optional(),
+  // Dados profissionais - Pessoa Física
+  empresa: z.string().optional(),
+  cargo: z.string().optional(),
+  naturezaOcupacao: z.string().optional(),
 
   // Dados pessoais - Pessoa Jurídica (campos específicos + comuns)
   cnpjPJ: z.string().optional().refine((value) => {
@@ -724,10 +724,10 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
       estadoCivil: '',
       possuiCnh: undefined,
 
-      // Dados profissionais - Pessoa Física (TEMPORARIAMENTE DESABILITADOS)
-      // empresa: '',
-      // cargo: '',
-      // naturezaOcupacao: '',
+      // Dados profissionais - Pessoa Física
+      empresa: '',
+      cargo: '',
+      naturezaOcupacao: '',
 
       // Dados pessoais - Pessoa Jurídica
       razaoSocial: '',
@@ -1215,8 +1215,8 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
         { field: 'naturalidade', message: 'Naturalidade é obrigatória.' },
         { field: 'estadoCivil', message: 'Estado civil é obrigatório.' },
         { field: 'possuiCnh', message: 'Informe se possui CNH.' },
-        // { field: 'naturezaOcupacao', message: 'Natureza da ocupação é obrigatória.' },
-        // { field: 'cargo', message: 'Cargo é obrigatório.' }
+        { field: 'naturezaOcupacao', message: 'Natureza da ocupação é obrigatória.' },
+        { field: 'cargo', message: 'Cargo é obrigatório.' }
       ];
 
       camposPF.forEach(({ field, message }) => {
@@ -2285,8 +2285,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       </FormItem>
                     )}/>
 
-                    {/* Dados Profissionais - Pessoa Física (TEMPORARIAMENTE DESABILITADOS) */}
-                    {/*
+                    {/* Dados Profissionais - Pessoa Física */}
                     <div className="col-span-full">
                       <h3 className="text-base font-medium text-gray-900 mb-3 mt-2 border-b pb-1">
                         Dados Profissionais
@@ -2339,7 +2338,6 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                         <FormMessage />
                       </FormItem>
                     )}/>
-                    */}
 
                     {/* Campo Observações - Pessoa Física */}
                     <FormField control={form.control} name="observacoesPF" render={({ field }) => (
