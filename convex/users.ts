@@ -152,6 +152,28 @@ export const getCurrentUser = query({
   },
 });
 
+// Query alternativa mais simples para listar usuários (SEM VALIDAÇÃO)
+export const getSimpleUsersList = query({
+  args: {},
+  handler: async (ctx, args) => {
+    try {
+      console.log("getSimpleUsersList: Iniciando query simples");
+      const users = await ctx.db.query("users").collect();
+      console.log("getSimpleUsersList: Encontrados", users.length, "usuários");
+
+      return users.map(user => ({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }));
+    } catch (error) {
+      console.error("getSimpleUsersList: Erro:", error);
+      return [];
+    }
+  },
+});
+
 export const getUsers = query({
   args: { userId: v.optional(v.union(v.id("users"), v.null())) },
   handler: async (ctx, args) => {
