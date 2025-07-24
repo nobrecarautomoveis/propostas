@@ -55,8 +55,8 @@ export default function SimpleLoginPage() {
         const cookieValue = `userId=${result.userId}; path=/; max-age=86400; secure=${window.location.protocol === 'https:'}; samesite=strict`;
         document.cookie = cookieValue;
         
-        console.log('🚀 Redirecionando para /propostas');
-        router.push('/propostas');
+        console.log('🚀 Redirecionando para /propostas-simple');
+        router.push('/propostas-simple');
       } else {
         setError('ID de usuário não retornado.');
       }
