@@ -43,10 +43,13 @@ export function ProposalList() {
     const [proposalToDelete, setProposalToDelete] = useState<Proposal | null>(null);
     const [userCache, setUserCache] = useState<Record<string, any>>({});
 
-    // Consulta as propostas do backend (só quando autenticado)
+    // Consulta as propostas do backend (só quando autenticado) - FORÇAR CACHE BUST
     const proposals = useQuery(
       api.proposals.getProposals,
-      currentUser?._id ? { userId: currentUser._id } : "skip"
+      currentUser?._id ? {
+        userId: currentUser._id,
+        cacheBust: Date.now() // Força nova query a cada render
+      } : "skip"
     );
 
     // DEBUG: Log das propostas recebidas

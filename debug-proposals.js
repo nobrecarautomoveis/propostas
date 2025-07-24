@@ -61,22 +61,46 @@ async function debugProposals() {
       }
     }
 
-    // Testa buscar o usuário específico das propostas de produção
-    console.log("\n🔍 TESTANDO USUÁRIO ESPECÍFICO DAS PROPOSTAS:");
-    const problematicUserId = "j973zgpsywtr5hxsjvcyqkexbn7kqmr8";
-    console.log(`🧪 Buscando usuário ID: ${problematicUserId}`);
-
+    // Busca as propostas RAW (sem join) para ver os dados reais
+    console.log("\n🔍 BUSCANDO PROPOSTAS RAW (SEM JOIN):");
     try {
-      const foundUser = await client.query("users:getCurrentUser", {
-        userId: problematicUserId
+      const rawProposals = await client.query("proposals:getAllProposalsRaw", {});
+      console.log("📊 Propostas RAW encontradas:", rawProposals.length);
+
+      rawProposals.forEach((proposal, index) => {
+        console.log(`\n📝 PROPOSTA RAW ${index + 1}:`);
+        console.log(`   ID: ${proposal._id}`);
+        console.log(`   Número: ${proposal.proposalNumber}`);
+        console.log(`   SalespersonId: ${proposal.salespersonId || 'VAZIO'}`);
+        console.log(`   Data criação: ${new Date(proposal._creationTime).toLocaleString()}`);
       });
-      if (foundUser) {
-        console.log(`✅ USUÁRIO ENCONTRADO: ${foundUser.name} (${foundUser.email})`);
-      } else {
-        console.log(`❌ USUÁRIO NÃO ENCONTRADO - Este é o problema!`);
-      }
     } catch (error) {
-      console.log(`💥 ERRO ao buscar usuário: ${error.message}`);
+      console.error("❌ Erro ao buscar propostas RAW:", error);
+    }
+
+    // Testa buscar usuários específicos das propostas
+    console.log("\n🔍 TESTANDO USUÁRIOS ESPECÍFICOS DAS PROPOSTAS:");
+    const userIdsToTest = [
+      "j973zgpsywtr5hxsjvcyqkexbn7kqmr8", // ID das propostas de produção
+      "j97dcjhmecxf03n4wv3pvwsx297mawsa", // Nobre Car Admin
+      "j97e5hp9p10mgzav05wa8erwxs7m4ndw", // Admin
+      "j97d5nrp2vsgkat2zy19b2gam57m8z77"  // fabricius
+    ];
+
+    for (const userId of userIdsToTest) {
+      console.log(`\n🧪 Testando usuário ID: ${userId}`);
+      try {
+        const foundUser = await client.query("users:getCurrentUser", {
+          userId: userId
+        });
+        if (foundUser) {
+          console.log(`✅ ENCONTRADO: ${foundUser.name} (${foundUser.email})`);
+        } else {
+          console.log(`❌ NÃO ENCONTRADO`);
+        }
+      } catch (error) {
+        console.log(`💥 ERRO: ${error.message}`);
+      }
     }
     
     console.log("\n" + "=" * 50);
