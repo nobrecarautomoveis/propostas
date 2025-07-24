@@ -1,7 +1,7 @@
 // Script para investigar dados das propostas
 const { ConvexHttpClient } = require("convex/browser");
 
-const client = new ConvexHttpClient("https://knowing-chickadee-162.convex.cloud");
+const client = new ConvexHttpClient("https://focused-walrus-736.convex.cloud");
 
 async function debugProposals() {
   try {
