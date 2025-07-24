@@ -44,7 +44,7 @@ export const getProposals = query({
 
 // Consulta para obter uma proposta específica
 export const getProposalById = query({
-  args: { 
+  args: {
     proposalId: v.id("proposals"),
     userId: v.union(v.id("users"), v.null())
   },
@@ -54,17 +54,33 @@ export const getProposalById = query({
     }
 
     const proposal = await ctx.db.get(args.proposalId);
-    
+
     if (!proposal) {
       throw new Error("Proposta não encontrada.");
     }
 
     const currentUser = await ctx.db.get(args.userId);
 
+    // Busca dados do usuário criador (se existir)
+    let createdBy = null;
+    if (proposal.salespersonId) {
+      const user = await ctx.db.get(proposal.salespersonId);
+      if (user) {
+        createdBy = {
+          _id: user._id,
+          name: user.name,
+          email: user.email
+        };
+      }
+    }
+
     // Qualquer usuário autenticado pode ver propostas
     // (Transparência total no sistema)
 
-    return proposal;
+    return {
+      ...proposal,
+      createdBy // Adiciona dados do usuário criador
+    };
   },
 });
 
