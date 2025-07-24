@@ -42,18 +42,16 @@ export function ProposalList() {
     const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
     const [proposalToDelete, setProposalToDelete] = useState<Proposal | null>(null);
 
-    // Consulta as propostas do backend
+    // Consulta as propostas do backend (só quando autenticado)
     const proposals = useQuery(
       api.proposals.getProposals,
-      { userId: currentUser?._id || null },
-      { enabled: !!currentUser?._id } // Só executa se houver usuário autenticado
+      currentUser?._id ? { userId: currentUser._id } : "skip"
     );
 
-    // Consulta todos os usuários para o filtro
+    // Consulta todos os usuários para o filtro (só quando autenticado)
     const users = useQuery(
       api.users.getAllUsers,
-      { requesterId: currentUser?._id || null },
-      { enabled: !!currentUser?._id }
+      currentUser?._id ? { requesterId: currentUser._id } : "skip"
     );
 
     // Mutations para criar, atualizar e excluir propostas
