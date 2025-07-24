@@ -82,11 +82,23 @@ export function ProposalList() {
 
     const handleFormSubmit = async (data: ProposalFormData) => {
         try {
+            // Validação do usuário atual
+            if (!currentUser?._id) {
+                toast({
+                    title: "Erro de Autenticação",
+                    description: "Usuário não encontrado. Faça login novamente.",
+                    variant: "destructive"
+                });
+                return;
+            }
+
+            console.log("🔍 Criando proposta com userId:", currentUser._id);
+
             if (editingProposal) {
                 // Atualiza proposta existente
                 await updateProposalMutation({
                     proposalId: editingProposal._id,
-                    userId: currentUser?._id as Id<"users">,
+                    userId: currentUser._id as Id<"users">,
                     ...data
                 });
 
@@ -98,9 +110,9 @@ export function ProposalList() {
                 // Cria nova proposta
                 await createProposalMutation({
                     ...data,
-                    userId: currentUser?._id as Id<"users">
+                    userId: currentUser._id as Id<"users">
                 });
-                
+
                 toast({
                     title: "Proposta Criada",
                     description: "A proposta foi criada com sucesso."
@@ -109,10 +121,24 @@ export function ProposalList() {
             
             setIsDialogOpen(false);
             setEditingProposal(null);
-        } catch (error) {
+        } catch (error: any) {
+            console.error('❌ Erro ao salvar proposta:', error);
+
+            // Tratamento específico de erros
+            let errorMessage = "Ocorreu um erro ao processar a proposta.";
+
+            if (error.message?.includes("Server Error")) {
+                errorMessage = "Erro no servidor. Verifique se todos os campos estão preenchidos corretamente.";
+                console.log("🔍 Possível causa: userId inválido ou campos obrigatórios faltando");
+            } else if (error.message?.includes("validation")) {
+                errorMessage = "Dados inválidos. Verifique os campos obrigatórios.";
+            } else if (error.message?.includes("user")) {
+                errorMessage = "Erro de usuário. Faça login novamente.";
+            }
+
             toast({
                 title: "Erro",
-                description: error instanceof Error ? error.message : "Ocorreu um erro ao processar a proposta.",
+                description: errorMessage,
                 variant: "destructive"
             });
         }
