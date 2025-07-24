@@ -13,18 +13,29 @@ export const getUserById = query({
 export const getAllUsers = query({
   args: { requesterId: v.union(v.id("users"), v.null()) },
   handler: async (ctx, args) => {
-    if (!args.requesterId) {
+    try {
+      if (!args.requesterId) {
+        return [];
+      }
+
+      // Verifica se o usuário solicitante existe
+      const requester = await ctx.db.get(args.requesterId);
+      if (!requester) {
+        return [];
+      }
+
+      // Retorna apenas id, name e email (dados básicos para listagem)
+      const users = await ctx.db.query("users").collect();
+      return users.map(user => ({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }));
+    } catch (error) {
+      console.error("Erro em getAllUsers:", error);
       return [];
     }
-
-    // Retorna apenas id, name e email (dados básicos para listagem)
-    const users = await ctx.db.query("users").collect();
-    return users.map(user => ({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role
-    }));
   },
 });
 
@@ -97,10 +108,16 @@ export const getAllUsersInternal = internalQuery({
 export const getCurrentUser = query({
   args: { userId: v.union(v.id("users"), v.null()) },
   handler: async (ctx, args) => {
-    if (!args.userId) {
+    try {
+      if (!args.userId) {
+        return null;
+      }
+      const user = await ctx.db.get(args.userId);
+      return user || null;
+    } catch (error) {
+      console.error("Erro em getCurrentUser:", error);
       return null;
     }
-    return ctx.db.get(args.userId);
   },
 });
 
