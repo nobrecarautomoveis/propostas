@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, query, internalQuery } from "./_generated/server";
+import { internalMutation, query, internalQuery, mutation } from "./_generated/server";
 
 // Apenas queries e mutations (sem "use node")
 export const getUserById = query({
@@ -171,6 +171,39 @@ export const getSimpleUsersList = query({
       console.error("getSimpleUsersList: Erro:", error);
       return [];
     }
+  },
+});
+
+// Mutation para criar usuário (para migração)
+export const createUser = mutation({
+  args: {
+    name: v.string(),
+    email: v.string(),
+    role: v.union(v.literal("ADMIN"), v.literal("USER"))
+  },
+  handler: async (ctx, args) => {
+    console.log("createUser: Criando usuário:", args.name, args.email);
+
+    // Verifica se já existe
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+
+    if (existing) {
+      throw new Error(`Usuário com email ${args.email} já existe`);
+    }
+
+    // Cria o usuário
+    const userId = await ctx.db.insert("users", {
+      name: args.name,
+      email: args.email,
+      role: args.role,
+      passwordHash: "senha123hash" // Hash da senha padrão
+    });
+
+    console.log("createUser: Usuário criado com ID:", userId);
+    return userId;
   },
 });
 
