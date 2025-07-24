@@ -21,13 +21,37 @@ export const getProposals = query({
 
         // Busca dados do usuário criador (se existir)
         if (proposal.salespersonId) {
-          const user = await ctx.db.get(proposal.salespersonId);
-          if (user) {
-            createdBy = {
-              _id: user._id,
-              name: user.name,
-              email: user.email
-            };
+          try {
+            const user = await ctx.db.get(proposal.salespersonId);
+            if (user) {
+              createdBy = {
+                _id: user._id,
+                name: user.name,
+                email: user.email
+              };
+            } else {
+              console.log("Usuário não encontrado para ID:", proposal.salespersonId);
+            }
+          } catch (error) {
+            console.error("Erro ao buscar usuário:", proposal.salespersonId, error);
+          }
+        } else {
+          console.log("Proposta sem salespersonId:", proposal._id);
+        }
+
+        // Se não encontrou o usuário, usa dados do usuário atual como fallback
+        if (!createdBy && args.userId) {
+          try {
+            const currentUser = await ctx.db.get(args.userId);
+            if (currentUser) {
+              createdBy = {
+                _id: currentUser._id,
+                name: currentUser.name,
+                email: currentUser.email
+              };
+            }
+          } catch (error) {
+            console.error("Erro ao buscar usuário atual:", args.userId, error);
           }
         }
 
