@@ -327,8 +327,8 @@ export function ProposalList() {
                     <div>
                         <CardTitle className="mb-1">
                             Propostas
-                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                BASE DEV
+                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                BASE PROD
                             </span>
                         </CardTitle>
                         <CardDescription>
