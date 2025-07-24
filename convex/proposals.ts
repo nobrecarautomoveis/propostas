@@ -56,10 +56,21 @@ export const getProposals = query({
                 name: currentUser.name,
                 email: currentUser.email
               };
+              console.log(`Usando fallback do usuário atual para proposta ${proposal.proposalNumber}: ${currentUser.name}`);
             }
           } catch (error) {
             console.error("Erro ao buscar usuário atual:", args.userId, error);
           }
+        }
+
+        // ÚLTIMO FALLBACK: Se ainda não tem createdBy, cria um genérico
+        if (!createdBy) {
+          console.log(`Criando fallback genérico para proposta ${proposal.proposalNumber}`);
+          createdBy = {
+            _id: "unknown",
+            name: "Usuário Desconhecido",
+            email: "unknown@unknown.com"
+          };
         }
 
         return {
