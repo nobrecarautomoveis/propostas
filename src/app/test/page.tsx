@@ -23,7 +23,7 @@ export default function TestPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
         <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
-          🔧 Página de Teste v2.0
+          🔧 Página de Teste v3.0 - FORÇANDO BASE DEV
         </h1>
         
         <div className="space-y-4">

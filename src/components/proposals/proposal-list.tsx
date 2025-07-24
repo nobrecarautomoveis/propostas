@@ -325,7 +325,12 @@ export function ProposalList() {
               <CardHeader>
                 <div className="flex items-center justify-between gap-4">
                     <div>
-                        <CardTitle className="mb-1">Propostas</CardTitle>
+                        <CardTitle className="mb-1">
+                            Propostas
+                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                BASE DEV
+                            </span>
+                        </CardTitle>
                         <CardDescription>
                           Gerencie suas propostas de financiamento e refinanciamento.
                         </CardDescription>
