@@ -9,31 +9,35 @@ export const getUserById = query({
   },
 });
 
-// Query para buscar todos os usuários (para filtros e listagens)
+// Query para buscar todos os usuários (para filtros e listagens) - VERSÃO SIMPLIFICADA
 export const getAllUsers = query({
   args: { requesterId: v.union(v.id("users"), v.null()) },
   handler: async (ctx, args) => {
     try {
+      // Se não há requesterId, retorna array vazio (sem erro)
       if (!args.requesterId) {
+        console.log("getAllUsers: Sem requesterId, retornando array vazio");
         return [];
       }
 
-      // Verifica se o usuário solicitante existe
-      const requester = await ctx.db.get(args.requesterId);
-      if (!requester) {
-        return [];
-      }
+      console.log("getAllUsers: Buscando usuários para requesterId:", args.requesterId);
 
-      // Retorna apenas id, name e email (dados básicos para listagem)
+      // Busca todos os usuários sem verificar o solicitante (simplificado)
       const users = await ctx.db.query("users").collect();
-      return users.map(user => ({
+      console.log("getAllUsers: Encontrados", users.length, "usuários");
+
+      const result = users.map(user => ({
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role
       }));
+
+      console.log("getAllUsers: Retornando", result.length, "usuários");
+      return result;
     } catch (error) {
       console.error("Erro em getAllUsers:", error);
+      // Em caso de erro, retorna array vazio em vez de falhar
       return [];
     }
   },
