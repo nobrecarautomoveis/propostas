@@ -48,16 +48,16 @@ export function ProposalList() {
       currentUser?._id ? { userId: currentUser._id } : "skip"
     );
 
-    // Consulta todos os usuários para o filtro (TEMPORARIAMENTE DESABILITADO)
-    // const users = useQuery(
-    //   api.users.getAllUsers,
-    //   currentUser?._id ? { requesterId: currentUser._id } : "skip"
-    // );
+    // Consulta todos os usuários para o filtro (VERSÃO ROBUSTA)
+    const usersQuery = useQuery(
+      api.users.getAllUsers,
+      currentUser?._id ? { requesterId: currentUser._id } : "skip"
+    );
 
-    // MOCK temporário para não quebrar o sistema
-    const users = currentUser ? [
+    // Fallback para garantir que sempre temos pelo menos o usuário atual
+    const users = usersQuery || (currentUser ? [
       { _id: currentUser._id, name: currentUser.name, email: currentUser.email, role: currentUser.role }
-    ] : [];
+    ] : []);
 
     // Mutations para criar, atualizar e excluir propostas
     const createProposalMutation = useMutation(api.proposals.createProposal);

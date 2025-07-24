@@ -9,34 +9,61 @@ export const getUserById = query({
   },
 });
 
-// Query para buscar todos os usuários (para filtros e listagens) - VERSÃO SIMPLIFICADA
+// Query para buscar todos os usuários (para filtros e listagens) - VERSÃO ULTRA ROBUSTA
 export const getAllUsers = query({
   args: { requesterId: v.union(v.id("users"), v.null()) },
   handler: async (ctx, args) => {
     try {
+      console.log("getAllUsers: Iniciando query com requesterId:", args.requesterId);
+
       // Se não há requesterId, retorna array vazio (sem erro)
       if (!args.requesterId) {
         console.log("getAllUsers: Sem requesterId, retornando array vazio");
         return [];
       }
 
-      console.log("getAllUsers: Buscando usuários para requesterId:", args.requesterId);
+      // Verifica se o requesterId é válido
+      try {
+        const requester = await ctx.db.get(args.requesterId);
+        if (!requester) {
+          console.log("getAllUsers: Requester não encontrado, retornando array vazio");
+          return [];
+        }
+        console.log("getAllUsers: Requester válido:", requester.name);
+      } catch (requesterError) {
+        console.error("getAllUsers: Erro ao verificar requester:", requesterError);
+        return [];
+      }
 
-      // Busca todos os usuários sem verificar o solicitante (simplificado)
+      console.log("getAllUsers: Buscando todos os usuários...");
+
+      // Busca todos os usuários
       const users = await ctx.db.query("users").collect();
       console.log("getAllUsers: Encontrados", users.length, "usuários");
 
-      const result = users.map(user => ({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }));
+      if (!users || users.length === 0) {
+        console.log("getAllUsers: Nenhum usuário encontrado");
+        return [];
+      }
 
-      console.log("getAllUsers: Retornando", result.length, "usuários");
+      const result = users.map(user => {
+        if (!user || !user._id || !user.name) {
+          console.warn("getAllUsers: Usuário com dados incompletos:", user);
+          return null;
+        }
+        return {
+          _id: user._id,
+          name: user.name,
+          email: user.email || '',
+          role: user.role || 'USER'
+        };
+      }).filter(Boolean); // Remove nulls
+
+      console.log("getAllUsers: Retornando", result.length, "usuários válidos");
       return result;
     } catch (error) {
-      console.error("Erro em getAllUsers:", error);
+      console.error("getAllUsers: Erro crítico:", error);
+      console.error("getAllUsers: Stack trace:", error.stack);
       // Em caso de erro, retorna array vazio em vez de falhar
       return [];
     }
