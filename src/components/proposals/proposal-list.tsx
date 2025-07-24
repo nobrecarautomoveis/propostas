@@ -54,13 +54,13 @@ export function ProposalList() {
       if (proposals) {
         console.log("🔍 FRONTEND - Propostas recebidas:", proposals.length);
         proposals.forEach((p, i) => {
-          console.log(`📝 Proposta ${i+1}:`, {
+          console.log(`📝 Proposta ${i+1} (${p.proposalNumber}):`, {
             id: p._id,
-            number: p.proposalNumber,
             salespersonId: p.salespersonId,
             createdBy: p.createdBy,
             hasCreatedBy: !!p.createdBy,
-            createdByName: p.createdBy?.name
+            createdByName: p.createdBy?.name,
+            fallbackWillBeUsed: !p.createdBy && !!p.salespersonId
           });
         });
       }
