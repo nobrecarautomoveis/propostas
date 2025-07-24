@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,23 @@ export function ProposalList() {
       api.proposals.getProposals,
       currentUser?._id ? { userId: currentUser._id } : "skip"
     );
+
+    // DEBUG: Log das propostas recebidas
+    React.useEffect(() => {
+      if (proposals) {
+        console.log("🔍 FRONTEND - Propostas recebidas:", proposals.length);
+        proposals.forEach((p, i) => {
+          console.log(`📝 Proposta ${i+1}:`, {
+            id: p._id,
+            number: p.proposalNumber,
+            salespersonId: p.salespersonId,
+            createdBy: p.createdBy,
+            hasCreatedBy: !!p.createdBy,
+            createdByName: p.createdBy?.name
+          });
+        });
+      }
+    }, [proposals]);
 
     // QUERY DESABILITADA - USANDO APENAS USUÁRIO ATUAL
     // Temporariamente desabilitado até resolver problema de produção
