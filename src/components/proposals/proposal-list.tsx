@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ export function ProposalList() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
     const [proposalToDelete, setProposalToDelete] = useState<Proposal | null>(null);
-    const [userCache, setUserCache] = useState<Record<string, any>>({});
+
     const [refreshKey, setRefreshKey] = useState(0);
 
     // Consulta as propostas do backend (só quando autenticado)
@@ -53,86 +53,16 @@ export function ProposalList() {
     // Função para forçar atualização
     const forceRefresh = () => {
       setRefreshKey(prev => prev + 1);
-      setUserCache({}); // Limpa cache local também
     };
 
-    // DEBUG: Log das propostas recebidas
+    // Log simples para monitoramento (opcional)
     React.useEffect(() => {
       if (proposals) {
-        console.log("🔍 FRONTEND - Propostas recebidas:", proposals.length);
-        console.log("🕐 Timestamp:", new Date().toISOString());
-        proposals.forEach((p, i) => {
-          console.log(`📝 Proposta ${i+1} (${p.proposalNumber}):`, {
-            id: p._id,
-            salespersonId: p.salespersonId,
-            createdBy: p.createdBy,
-            hasCreatedBy: !!p.createdBy,
-            createdByName: p.createdBy?.name,
-            fallbackWillBeUsed: !p.createdBy && !!p.salespersonId,
-            // Dados completos para debug
-            fullCreatedBy: p.createdBy
-          });
-        });
-
-        // Log especial se ainda há fallback
-        const needsFallback = proposals.filter(p => !p.createdBy && p.salespersonId);
-        if (needsFallback.length > 0) {
-          console.log("⚠️ PROPOSTAS QUE PRECISAM DE FALLBACK:", needsFallback.length);
-          console.log("🔧 Isso indica que o cache ainda não foi limpo!");
-        } else {
-          console.log("✅ TODAS AS PROPOSTAS TÊM CREATEDBY - CACHE LIMPO!");
-        }
+        console.log(`📊 Propostas carregadas: ${proposals.length}`);
       }
     }, [proposals]);
 
-    // CORREÇÃO: Criar cache de usuários para propostas sem createdBy
-    useEffect(() => {
-      if (!proposals || !currentUser) return;
-
-      const missingUsers: Record<string, any> = {};
-
-      for (const proposal of proposals) {
-        // Se não tem createdBy mas tem salespersonId, usa o usuário atual como fallback
-        if (!proposal.createdBy && proposal.salespersonId && !userCache[proposal.salespersonId]) {
-          console.log(`🔧 Usando fallback para proposta ${proposal.proposalNumber} - usuário: ${currentUser.name}`);
-
-          missingUsers[proposal.salespersonId] = {
-            _id: currentUser._id,
-            name: `${currentUser.name} (Fallback)`,
-            email: currentUser.email
-          };
-        }
-      }
-
-      if (Object.keys(missingUsers).length > 0) {
-        setUserCache(prev => ({ ...prev, ...missingUsers }));
-      }
-    }, [proposals, currentUser]);
-
-    // Função para obter dados do usuário (com fallback)
-    const getUserData = (proposal: any) => {
-      // Se tem createdBy, usa ele
-      if (proposal.createdBy) {
-        return proposal.createdBy;
-      }
-
-      // Se tem no cache, usa o cache
-      if (proposal.salespersonId && userCache[proposal.salespersonId]) {
-        return userCache[proposal.salespersonId];
-      }
-
-      // Fallback: usuário atual
-      if (currentUser) {
-        return {
-          _id: currentUser._id,
-          name: currentUser.name,
-          email: currentUser.email
-        };
-      }
-
-      // Último fallback
-      return null;
-    };
+    // Sistema funcionando - fallback não é mais necessário
 
     // QUERY REABILITADA - BASE PROD FUNCIONANDO
     const usersQuery = useQuery(
@@ -324,12 +254,7 @@ export function ProposalList() {
               <CardHeader>
                 <div className="flex items-center justify-between gap-4">
                     <div>
-                        <CardTitle className="mb-1">
-                            Propostas
-                            <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                BASE PROD
-                            </span>
-                        </CardTitle>
+                        <CardTitle className="mb-1">Propostas</CardTitle>
                         <CardDescription>
                           Gerencie suas propostas de financiamento e refinanciamento.
                         </CardDescription>
@@ -408,24 +333,15 @@ export function ProposalList() {
                                         <div className="flex items-center gap-2">
                                             <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                                                 <span className="text-xs font-medium text-primary">
-                                                    {(() => {
-                                                        const userData = getUserData(proposal);
-                                                        return userData?.name ? userData.name.charAt(0).toUpperCase() : '?';
-                                                    })()}
+                                                    {proposal.createdBy?.name ? proposal.createdBy.name.charAt(0).toUpperCase() : '?'}
                                                 </span>
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className="text-sm font-medium truncate">
-                                                    {(() => {
-                                                        const userData = getUserData(proposal);
-                                                        return userData?.name || 'Não encontrado';
-                                                    })()}
+                                                    {proposal.createdBy?.name || 'Não encontrado'}
                                                 </span>
                                                 <span className="text-xs text-muted-foreground truncate">
-                                                    {(() => {
-                                                        const userData = getUserData(proposal);
-                                                        return userData?.email || '';
-                                                    })()}
+                                                    {proposal.createdBy?.email || ''}
                                                 </span>
                                             </div>
                                         </div>
