@@ -60,6 +60,7 @@ export function ProposalList() {
     React.useEffect(() => {
       if (proposals) {
         console.log("🔍 FRONTEND - Propostas recebidas:", proposals.length);
+        console.log("🕐 Timestamp:", new Date().toISOString());
         proposals.forEach((p, i) => {
           console.log(`📝 Proposta ${i+1} (${p.proposalNumber}):`, {
             id: p._id,
@@ -67,9 +68,20 @@ export function ProposalList() {
             createdBy: p.createdBy,
             hasCreatedBy: !!p.createdBy,
             createdByName: p.createdBy?.name,
-            fallbackWillBeUsed: !p.createdBy && !!p.salespersonId
+            fallbackWillBeUsed: !p.createdBy && !!p.salespersonId,
+            // Dados completos para debug
+            fullCreatedBy: p.createdBy
           });
         });
+
+        // Log especial se ainda há fallback
+        const needsFallback = proposals.filter(p => !p.createdBy && p.salespersonId);
+        if (needsFallback.length > 0) {
+          console.log("⚠️ PROPOSTAS QUE PRECISAM DE FALLBACK:", needsFallback.length);
+          console.log("🔧 Isso indica que o cache ainda não foi limpo!");
+        } else {
+          console.log("✅ TODAS AS PROPOSTAS TÊM CREATEDBY - CACHE LIMPO!");
+        }
       }
     }, [proposals]);
 
