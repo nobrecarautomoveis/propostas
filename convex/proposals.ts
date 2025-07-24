@@ -5,14 +5,10 @@ import { api } from "./_generated/api";
 
 // Consulta para obter todas as propostas com dados do usuário criador
 export const getProposals = query({
-  args: {
-    userId: v.union(v.id("users"), v.null()),
-    cacheBust: v.optional(v.number()) // Para forçar cache bust
-  },
+  args: { userId: v.union(v.id("users"), v.null()) },
   handler: async (ctx, args) => {
     console.log("🔄 getProposals chamada:", {
       userId: args.userId,
-      cacheBust: args.cacheBust,
       timestamp: new Date().toISOString()
     });
 

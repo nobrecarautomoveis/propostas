@@ -42,15 +42,19 @@ export function ProposalList() {
     const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
     const [proposalToDelete, setProposalToDelete] = useState<Proposal | null>(null);
     const [userCache, setUserCache] = useState<Record<string, any>>({});
+    const [refreshKey, setRefreshKey] = useState(0);
 
-    // Consulta as propostas do backend (só quando autenticado) - FORÇAR CACHE BUST
+    // Consulta as propostas do backend (só quando autenticado)
     const proposals = useQuery(
       api.proposals.getProposals,
-      currentUser?._id ? {
-        userId: currentUser._id,
-        cacheBust: Date.now() // Força nova query a cada render
-      } : "skip"
+      currentUser?._id ? { userId: currentUser._id } : "skip"
     );
+
+    // Função para forçar atualização
+    const forceRefresh = () => {
+      setRefreshKey(prev => prev + 1);
+      setUserCache({}); // Limpa cache local também
+    };
 
     // DEBUG: Log das propostas recebidas
     React.useEffect(() => {
