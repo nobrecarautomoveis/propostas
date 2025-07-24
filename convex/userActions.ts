@@ -151,6 +151,41 @@ export const login = action({
   },
 });
 
+// Função para criar usuário admin padrão se não existir
+export const ensureAdminUser = action({
+  args: {},
+  handler: async (ctx, args) => {
+    try {
+      // Verifica se já existe um admin
+      const existingAdmin = await ctx.runQuery(internal.users.getUserByEmail, {
+        email: "admin@nobrecar.com"
+      });
+
+      if (existingAdmin) {
+        console.log("Admin já existe:", existingAdmin.email);
+        return { message: "Admin já existe", user: existingAdmin };
+      }
+
+      // Cria o usuário admin padrão
+      const passwordHash = hashPassword("@Nbr102030");
+
+      const adminId = await ctx.runMutation(internal.users.insertUser, {
+        name: "Admin",
+        email: "admin@nobrecar.com",
+        passwordHash: passwordHash,
+        role: "ADMIN"
+      });
+
+      console.log("Admin criado com sucesso:", adminId);
+      return { message: "Admin criado com sucesso", userId: adminId };
+
+    } catch (error) {
+      console.error("Erro ao criar admin:", error);
+      throw new Error(`Erro ao criar admin: ${error.message}`);
+    }
+  },
+});
+
 // Função temporária para diagnóstico de usuários
 export const debugUsers = action({
   args: {},
