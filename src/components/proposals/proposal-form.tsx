@@ -2171,6 +2171,28 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                   </FormItem>
                 )}/>
               )}
+
+              {/* Campo CNH logo após CPF */}
+              <FormField control={form.control} name="possuiCnh" render={({ field }) => (
+                tipoPessoa === 'fisica' ? (
+                  <FormItem>
+                    <FormLabel>Possui CNH?</FormLabel>
+                    <Select onValueChange={(value) => field.onChange(value === 'true')} value={field.value === undefined ? '' : field.value ? 'true' : 'false'}>
+                        <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="false">Não</SelectItem>
+                            <SelectItem value="true">Sim</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                ) : null
+              )}/>
+
               <FormField control={form.control} name="naturalidade" render={({ field }) => (
                 tipoPessoa === 'fisica' ? (
                   <FormItem>
@@ -2274,25 +2296,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                   </>
                 ) : null
               )}/>
-              <FormField control={form.control} name="possuiCnh" render={({ field }) => (
-                tipoPessoa === 'fisica' ? (
-                  <FormItem>
-                    <FormLabel>Possui CNH?</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(value === 'true')} value={field.value === undefined ? '' : field.value ? 'true' : 'false'}>
-                        <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione..." />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            <SelectItem value="false">Não</SelectItem>
-                            <SelectItem value="true">Sim</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                ) : null
-              )}/>
+
             </div>
             <div className="flex flex-col md:flex-row justify-between mt-6 gap-2">
               <Button
