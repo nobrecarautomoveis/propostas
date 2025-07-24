@@ -66,6 +66,11 @@ export default defineSchema({
     estadoCivil: v.optional(v.string()), // Estado civil
     possuiCnh: v.optional(v.boolean()), // Possui CNH
 
+    // Dados profissionais - Pessoa Física
+    empresa: v.optional(v.string()), // Empresa onde trabalha
+    cargo: v.optional(v.string()), // Cargo/função
+    naturezaOcupacao: v.optional(v.string()), // assalariado, autonomo, empresario
+
     // Dados pessoais - Pessoa Jurídica (campos específicos + comuns separados)
     cnpjPJ: v.optional(v.string()),
     emailPJ: v.optional(v.string()),

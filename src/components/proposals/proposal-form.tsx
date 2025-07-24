@@ -220,6 +220,11 @@ const formSchema = z.object({
   estadoCivil: z.string().optional(),
   possuiCnh: z.boolean().optional(),
 
+  // Dados profissionais - Pessoa Física
+  empresa: z.string().optional(),
+  cargo: z.string().optional(),
+  naturezaOcupacao: z.string().optional(),
+
   // Dados pessoais - Pessoa Jurídica (campos específicos + comuns)
   cnpjPJ: z.string().optional().refine((value) => {
     if (!value) return true; // Se vazio, deixa a validação condicional cuidar
@@ -719,6 +724,11 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
       estadoCivil: '',
       possuiCnh: undefined,
 
+      // Dados profissionais - Pessoa Física
+      empresa: '',
+      cargo: '',
+      naturezaOcupacao: '',
+
       // Dados pessoais - Pessoa Jurídica
       razaoSocial: '',
       nomeFantasia: '',
@@ -1204,7 +1214,9 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
         { field: 'orgaoExpedidor', message: 'Órgão expedidor é obrigatório.' },
         { field: 'naturalidade', message: 'Naturalidade é obrigatória.' },
         { field: 'estadoCivil', message: 'Estado civil é obrigatório.' },
-        { field: 'possuiCnh', message: 'Informe se possui CNH.' }
+        { field: 'possuiCnh', message: 'Informe se possui CNH.' },
+        { field: 'naturezaOcupacao', message: 'Natureza da ocupação é obrigatória.' },
+        { field: 'cargo', message: 'Cargo é obrigatório.' }
       ];
 
       camposPF.forEach(({ field, message }) => {
@@ -1369,7 +1381,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               )}/>
                <FormField control={form.control} name="isFinanced" render={({ field }) => (
                 <FormItem>
-                    <FormLabel className="font-medium">Veículo já financiado?</FormLabel>
+                    <FormLabel className="font-medium">Veículo c/ financiamento ativo?</FormLabel>
                     <Select onValueChange={(value) => field.onChange(value === 'true')} value={field.value === undefined ? '' : field.value ? 'true' : 'false'}>
                         <FormControl>
                             <SelectTrigger>
@@ -2268,6 +2280,60 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                             />
                             {isLoadingCepPF && <span className="text-xs text-muted-foreground">Buscando endereço...</span>}
                           </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+
+                    {/* Dados Profissionais - Pessoa Física */}
+                    <div className="col-span-full">
+                      <h3 className="text-base font-medium text-gray-900 mb-3 mt-2 border-b pb-1">
+                        Dados Profissionais
+                      </h3>
+                    </div>
+
+                    <FormField control={form.control} name="empresa" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Empresa</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Digite o nome da empresa (opcional)"
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+
+                    <FormField control={form.control} name="naturezaOcupacao" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-medium">Natureza da Ocupação</FormLabel>
+                        <FormControl>
+                          <Select onValueChange={field.onChange} value={field.value || ''}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="assalariado">Assalariado</SelectItem>
+                              <SelectItem value="autonomo">Autônomo</SelectItem>
+                              <SelectItem value="empresario">Empresário</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+
+                    <FormField control={form.control} name="cargo" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-medium">Cargo</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Digite o cargo/função"
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
