@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, action, internalQuery, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { api } from "./_generated/api";
 
 // Consulta para obter todas as propostas com dados do usuário criador
 export const getProposals = query({
@@ -349,5 +350,74 @@ export const updateProposalInternal = internalMutation({
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.proposalId, args.updates);
+  },
+});
+
+// Query para buscar todas as propostas sem join (para debug)
+export const getAllProposalsRaw = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("proposals").collect();
+  },
+});
+
+// Mutation para atualizar o usuário de uma proposta
+export const updateProposalUser = mutation({
+  args: {
+    proposalId: v.id("proposals"),
+    newUserId: v.id("users")
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.proposalId, {
+      salespersonId: args.newUserId
+    });
+  },
+});
+
+// Action para corrigir propostas com usuários inexistentes
+export const fixProposalsWithInvalidUsers = action({
+  args: {
+    newUserId: v.id("users") // ID do usuário válido para usar como substituto
+  },
+  handler: async (ctx, args) => {
+    console.log("🔧 INICIANDO CORREÇÃO DE PROPOSTAS...");
+
+    // Busca todas as propostas diretamente do banco
+    const allProposals = await ctx.runQuery(api.proposals.getAllProposalsRaw, {});
+    console.log("📊 Total de propostas encontradas:", allProposals.length);
+
+    let fixedCount = 0;
+
+    for (const proposal of allProposals) {
+      if (proposal.salespersonId) {
+        // Verifica se o usuário existe
+        try {
+          const user = await ctx.runQuery(api.users.getCurrentUser, {
+            userId: proposal.salespersonId
+          });
+
+          if (!user) {
+            console.log(`🔧 Corrigindo proposta ${proposal.proposalNumber} - usuário inexistente: ${proposal.salespersonId}`);
+
+            // Atualiza a proposta com o novo usuário
+            await ctx.runMutation(api.proposals.updateProposalUser, {
+              proposalId: proposal._id,
+              newUserId: args.newUserId
+            });
+
+            fixedCount++;
+          } else {
+            console.log(`✅ Proposta ${proposal.proposalNumber} - usuário OK: ${user.name}`);
+          }
+        } catch (error) {
+          console.error(`❌ Erro ao verificar usuário da proposta ${proposal.proposalNumber}:`, error);
+        }
+      } else {
+        console.log(`⚠️ Proposta ${proposal.proposalNumber} sem salespersonId`);
+      }
+    }
+
+    console.log(`🎯 CORREÇÃO CONCLUÍDA: ${fixedCount} propostas corrigidas`);
+    return { fixed: fixedCount, total: allProposals.length };
   },
 });

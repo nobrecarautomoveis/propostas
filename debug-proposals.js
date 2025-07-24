@@ -60,6 +60,24 @@ async function debugProposals() {
         console.log(`❌ ${user.name}: ERRO - ${error.message}`);
       }
     }
+
+    // Testa buscar o usuário específico das propostas de produção
+    console.log("\n🔍 TESTANDO USUÁRIO ESPECÍFICO DAS PROPOSTAS:");
+    const problematicUserId = "j973zgpsywtr5hxsjvcyqkexbn7kqmr8";
+    console.log(`🧪 Buscando usuário ID: ${problematicUserId}`);
+
+    try {
+      const foundUser = await client.query("users:getCurrentUser", {
+        userId: problematicUserId
+      });
+      if (foundUser) {
+        console.log(`✅ USUÁRIO ENCONTRADO: ${foundUser.name} (${foundUser.email})`);
+      } else {
+        console.log(`❌ USUÁRIO NÃO ENCONTRADO - Este é o problema!`);
+      }
+    } catch (error) {
+      console.log(`💥 ERRO ao buscar usuário: ${error.message}`);
+    }
     
     console.log("\n" + "=" * 50);
     console.log("🎯 INVESTIGAÇÃO CONCLUÍDA");
