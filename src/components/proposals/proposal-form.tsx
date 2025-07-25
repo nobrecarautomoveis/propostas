@@ -2296,7 +2296,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       <FormItem>
                         <FormLabel>Empresa</FormLabel>
                         <FormControl>
-                          <Input placeholder="Digite o nome da empresa (opcional)" {...field} />
+                          <Input placeholder="Digite o nome da empresa" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
