@@ -96,6 +96,14 @@ export function ProposalList() {
 
             if (editingProposal) {
                 // Atualiza proposta existente
+                console.log("🔍 Editando proposta com dados:", {
+                    proposalId: editingProposal._id,
+                    empresa: data.empresa,
+                    cargo: data.cargo,
+                    naturezaOcupacao: data.naturezaOcupacao,
+                    allData: data
+                });
+
                 await updateProposalMutation({
                     proposalId: editingProposal._id,
                     userId: currentUser._id as Id<"users">,
@@ -152,6 +160,13 @@ export function ProposalList() {
     // Função para converter Proposal para ProposalFormData
     const convertProposalToFormData = (proposal: Proposal): ProposalFormData => {
         const { _id, proposalNumber, dateAdded, salespersonId, ...formData } = proposal as any;
+
+        console.log("🔍 Convertendo proposta para edição:", {
+            empresa: formData.empresa,
+            cargo: formData.cargo,
+            naturezaOcupacao: formData.naturezaOcupacao,
+            proposalId: _id
+        });
         return {
             ...formData,
             // Garantir que campos opcionais tenham valores padrão adequados
@@ -180,6 +195,11 @@ export function ProposalList() {
             naturalidade: formData.naturalidade || '',
             estadoCivil: formData.estadoCivil || '',
             possuiCnh: formData.possuiCnh || false,
+
+            // Dados profissionais - Pessoa Física
+            empresa: formData.empresa || '',
+            cargo: formData.cargo || '',
+            naturezaOcupacao: formData.naturezaOcupacao || '',
 
             // Pessoa jurídica
             razaoSocial: formData.razaoSocial || '',

@@ -40,7 +40,3 @@ next-env.d.ts
 .genkit/*
 .env*
 
-# Remover estas linhas:
-# firebase
-# firebase-debug.log
-firestore-debug.log
