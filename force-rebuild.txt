@@ -1,0 +1,4 @@
+Arquivo criado para forçar rebuild completo do Vercel
+Timestamp: 2025-01-24 21:15:00
+Objetivo: Garantir que variável NEXT_PUBLIC_FIPE_TOKEN seja carregada
+Status: Investigando problema de token FIPE não sendo reconhecido
