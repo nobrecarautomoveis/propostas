@@ -113,6 +113,9 @@ export const testFipeConnection = async (): Promise<boolean> => {
   try {
     console.log('🧪 Testando conectividade com API FIPE v2...');
 
+    // Log temporário para debug
+    console.log('🔍 Debug token:', FIPE_TOKEN ? `Token presente (${FIPE_TOKEN.length} chars)` : 'Token ausente');
+
     const headers: HeadersInit = {
       'Content-Type': 'application/json'
     };
@@ -121,7 +124,6 @@ export const testFipeConnection = async (): Promise<boolean> => {
       headers['X-Subscription-Token'] = FIPE_TOKEN;
       console.log('🔑 Testando com token de autenticação...');
     } else {
-      // Log reduzido para evitar spam no console
       console.log('⚠️ Testando sem token (limite gratuito)...');
     }
 
