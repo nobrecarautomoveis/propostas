@@ -113,8 +113,8 @@ export const testFipeConnection = async (): Promise<boolean> => {
   try {
     console.log('🧪 Testando conectividade com API FIPE v2...');
 
-    // Log temporário para debug
-    console.log('🔍 Debug token:', FIPE_TOKEN ? `Token presente (${FIPE_TOKEN.length} chars)` : 'Token ausente');
+    // Log temporário para debug - AGUARDANDO CONFIGURAÇÃO NO VERCEL
+    console.log('🔍 Debug token:', FIPE_TOKEN ? `Token presente (${FIPE_TOKEN.length} chars)` : 'Token ausente - CONFIGURE NO VERCEL!');
 
     const headers: HeadersInit = {
       'Content-Type': 'application/json'

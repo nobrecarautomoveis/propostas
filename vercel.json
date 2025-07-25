@@ -1,0 +1,10 @@
+{
+  "env": {
+    "NEXT_PUBLIC_FIPE_TOKEN": "@fipe-token"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_FIPE_TOKEN": "@fipe-token"
+    }
+  }
+}
