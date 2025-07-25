@@ -41,15 +41,12 @@ export interface VehicleDetails {
 // Configuração da API FIPE v2 com suporte a token
 const FIPE_API_BASE_URL = 'https://fipe.parallelum.com.br/api/v2';
 
-// FALLBACK TEMPORÁRIO - Se Vercel não carregar, usar token hardcoded
-const FIPE_TOKEN_FROM_ENV = process.env.NEXT_PUBLIC_FIPE_TOKEN;
-const FIPE_TOKEN_HARDCODED = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZmNmZTA3Yy04MDJlLTQ2ZmQtYTI3OC04OGRjMTdkYjBkMzgiLCJlbWFpbCI6ImNvbnRhdG9Abm9icmVjYXJhdXRvbW92ZWlzLmNvbS5iciIsImlhdCI6MTc1MzIxNDU2OH0.D7t5STHblK_Rq_L9mKDPjEl9Kc9vKO89NjutzsrjMC0';
+// Token FIPE carregado do Vercel (funcionando!)
+const FIPE_TOKEN = process.env.NEXT_PUBLIC_FIPE_TOKEN || null;
 
-const FIPE_TOKEN = FIPE_TOKEN_FROM_ENV || FIPE_TOKEN_HARDCODED;
-
-// Debug simplificado - Token funcionando com fallback
-if (!FIPE_TOKEN_FROM_ENV) {
-  console.log('⚠️ FIPE Token: Usando fallback (Vercel não carregou variável)');
+// Debug simplificado - Token do Vercel funcionando
+if (FIPE_TOKEN) {
+  console.log('🔑 FIPE Token carregado do Vercel com sucesso');
 }
 
 // Função para adicionar delay entre requisições (evitar erro 429)
@@ -123,10 +120,9 @@ export const testFipeConnection = async (): Promise<boolean> => {
   try {
     console.log('🧪 Testando conectividade com API FIPE v2...');
 
-    // Log simplificado do token
+    // Log do token (agora funcionando via Vercel)
     if (FIPE_TOKEN) {
-      const tokenSource = FIPE_TOKEN_FROM_ENV ? 'Vercel' : 'Fallback';
-      console.log(`🔑 FIPE Token ativo (${tokenSource}) - ${FIPE_TOKEN.length} chars`);
+      console.log(`🔑 FIPE Token ativo (Vercel) - ${FIPE_TOKEN.length} chars`);
     }
 
     const headers: HeadersInit = {
