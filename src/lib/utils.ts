@@ -47,18 +47,10 @@ const FIPE_TOKEN_HARDCODED = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiO
 
 const FIPE_TOKEN = FIPE_TOKEN_FROM_ENV || FIPE_TOKEN_HARDCODED;
 
-// Debug das variáveis de ambiente (temporário) - COM FALLBACK
-console.log('🔍 Debug env vars (v4):', {
-  NODE_ENV: process.env.NODE_ENV,
-  tokenFromEnv: !!FIPE_TOKEN_FROM_ENV,
-  tokenFromHardcoded: !!FIPE_TOKEN_HARDCODED,
-  finalToken: !!FIPE_TOKEN,
-  tokenSource: FIPE_TOKEN_FROM_ENV ? 'VERCEL_ENV' : 'HARDCODED_FALLBACK',
-  tokenLength: FIPE_TOKEN?.length || 0,
-  tokenStart: FIPE_TOKEN?.substring(0, 10) || 'N/A',
-  allEnvKeys: Object.keys(process.env).filter(key => key.includes('FIPE')),
-  timestamp: new Date().toISOString()
-});
+// Debug simplificado - Token funcionando com fallback
+if (!FIPE_TOKEN_FROM_ENV) {
+  console.log('⚠️ FIPE Token: Usando fallback (Vercel não carregou variável)');
+}
 
 // Função para adicionar delay entre requisições (evitar erro 429)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -131,11 +123,11 @@ export const testFipeConnection = async (): Promise<boolean> => {
   try {
     console.log('🧪 Testando conectividade com API FIPE v2...');
 
-    // Log temporário para debug - COM FALLBACK HARDCODED
-    const tokenSource = FIPE_TOKEN_FROM_ENV ? 'VERCEL' : 'HARDCODED';
-    console.log('🔍 Debug token (v4):', FIPE_TOKEN ? `Token presente (${FIPE_TOKEN.length} chars) - Fonte: ${tokenSource}` : 'Token ausente mesmo com fallback!');
-    console.log('🔍 Variáveis FIPE encontradas:', Object.keys(process.env).filter(key => key.includes('FIPE')));
-    console.log('🔍 NEXT_PUBLIC_FIPE_TOKEN direto:', process.env.NEXT_PUBLIC_FIPE_TOKEN ? 'EXISTE' : 'NÃO EXISTE');
+    // Log simplificado do token
+    if (FIPE_TOKEN) {
+      const tokenSource = FIPE_TOKEN_FROM_ENV ? 'Vercel' : 'Fallback';
+      console.log(`🔑 FIPE Token ativo (${tokenSource}) - ${FIPE_TOKEN.length} chars`);
+    }
 
     const headers: HeadersInit = {
       'Content-Type': 'application/json'
