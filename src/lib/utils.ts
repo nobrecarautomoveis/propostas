@@ -42,6 +42,14 @@ export interface VehicleDetails {
 const FIPE_API_BASE_URL = 'https://fipe.parallelum.com.br/api/v2';
 const FIPE_TOKEN = process.env.NEXT_PUBLIC_FIPE_TOKEN || null;
 
+// Debug das variáveis de ambiente (temporário)
+console.log('🔍 Debug env vars:', {
+  NODE_ENV: process.env.NODE_ENV,
+  hasToken: !!FIPE_TOKEN,
+  tokenLength: FIPE_TOKEN?.length || 0,
+  tokenStart: FIPE_TOKEN?.substring(0, 10) || 'N/A'
+});
+
 // Função para adicionar delay entre requisições (evitar erro 429)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -113,8 +121,8 @@ export const testFipeConnection = async (): Promise<boolean> => {
   try {
     console.log('🧪 Testando conectividade com API FIPE v2...');
 
-    // Log temporário para debug - AGUARDANDO CONFIGURAÇÃO NO VERCEL
-    console.log('🔍 Debug token:', FIPE_TOKEN ? `Token presente (${FIPE_TOKEN.length} chars)` : 'Token ausente - CONFIGURE NO VERCEL!');
+    // Log temporário para debug - APÓS CONFIGURAÇÃO NO VERCEL
+    console.log('🔍 Debug token (v2):', FIPE_TOKEN ? `Token presente (${FIPE_TOKEN.length} chars)` : 'Token AINDA ausente - Verificar configuração!');
 
     const headers: HeadersInit = {
       'Content-Type': 'application/json'
