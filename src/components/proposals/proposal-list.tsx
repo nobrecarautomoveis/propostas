@@ -104,6 +104,12 @@ export function ProposalList() {
                     allData: data
                 });
 
+                console.log("📤 Dados completos sendo enviados para updateProposal:", {
+                    proposalId: editingProposal._id,
+                    userId: currentUser._id,
+                    ...data
+                });
+
                 await updateProposalMutation({
                     proposalId: editingProposal._id,
                     userId: currentUser._id as Id<"users">,
@@ -114,6 +120,10 @@ export function ProposalList() {
                     title: "Proposta Atualizada",
                     description: "A proposta foi atualizada com sucesso."
                 });
+
+                // Forçar atualização da lista
+                console.log("🔄 Forçando atualização da lista...");
+                forceRefresh();
             } else {
                 // Cria nova proposta
                 await createProposalMutation({
@@ -129,6 +139,8 @@ export function ProposalList() {
             
             setIsDialogOpen(false);
             setEditingProposal(null);
+
+            console.log("✅ Dialog fechado, proposta editada com sucesso");
         } catch (error: any) {
             console.error('❌ Erro ao salvar proposta:', error);
 
