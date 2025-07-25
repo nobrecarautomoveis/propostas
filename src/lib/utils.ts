@@ -40,12 +40,20 @@ export interface VehicleDetails {
 
 // Configuração da API FIPE v2 com suporte a token
 const FIPE_API_BASE_URL = 'https://fipe.parallelum.com.br/api/v2';
-const FIPE_TOKEN = process.env.NEXT_PUBLIC_FIPE_TOKEN || null;
 
-// Debug das variáveis de ambiente (temporário) - FORÇAR REDEPLOY
-console.log('🔍 Debug env vars (v3):', {
+// FALLBACK TEMPORÁRIO - Se Vercel não carregar, usar token hardcoded
+const FIPE_TOKEN_FROM_ENV = process.env.NEXT_PUBLIC_FIPE_TOKEN;
+const FIPE_TOKEN_HARDCODED = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZmNmZTA3Yy04MDJlLTQ2ZmQtYTI3OC04OGRjMTdkYjBkMzgiLCJlbWFpbCI6ImNvbnRhdG9Abm9icmVjYXJhdXRvbW92ZWlzLmNvbS5iciIsImlhdCI6MTc1MzIxNDU2OH0.D7t5STHblK_Rq_L9mKDPjEl9Kc9vKO89NjutzsrjMC0';
+
+const FIPE_TOKEN = FIPE_TOKEN_FROM_ENV || FIPE_TOKEN_HARDCODED;
+
+// Debug das variáveis de ambiente (temporário) - COM FALLBACK
+console.log('🔍 Debug env vars (v4):', {
   NODE_ENV: process.env.NODE_ENV,
-  hasToken: !!FIPE_TOKEN,
+  tokenFromEnv: !!FIPE_TOKEN_FROM_ENV,
+  tokenFromHardcoded: !!FIPE_TOKEN_HARDCODED,
+  finalToken: !!FIPE_TOKEN,
+  tokenSource: FIPE_TOKEN_FROM_ENV ? 'VERCEL_ENV' : 'HARDCODED_FALLBACK',
   tokenLength: FIPE_TOKEN?.length || 0,
   tokenStart: FIPE_TOKEN?.substring(0, 10) || 'N/A',
   allEnvKeys: Object.keys(process.env).filter(key => key.includes('FIPE')),
@@ -123,8 +131,9 @@ export const testFipeConnection = async (): Promise<boolean> => {
   try {
     console.log('🧪 Testando conectividade com API FIPE v2...');
 
-    // Log temporário para debug - APÓS CONFIGURAÇÃO NO VERCEL
-    console.log('🔍 Debug token (v3):', FIPE_TOKEN ? `Token presente (${FIPE_TOKEN.length} chars)` : 'Token AINDA ausente - Verificar configuração!');
+    // Log temporário para debug - COM FALLBACK HARDCODED
+    const tokenSource = FIPE_TOKEN_FROM_ENV ? 'VERCEL' : 'HARDCODED';
+    console.log('🔍 Debug token (v4):', FIPE_TOKEN ? `Token presente (${FIPE_TOKEN.length} chars) - Fonte: ${tokenSource}` : 'Token ausente mesmo com fallback!');
     console.log('🔍 Variáveis FIPE encontradas:', Object.keys(process.env).filter(key => key.includes('FIPE')));
     console.log('🔍 NEXT_PUBLIC_FIPE_TOKEN direto:', process.env.NEXT_PUBLIC_FIPE_TOKEN ? 'EXISTE' : 'NÃO EXISTE');
 
