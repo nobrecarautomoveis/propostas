@@ -282,6 +282,11 @@ export const updateProposal = mutation({
     estadoCivil: v.optional(v.string()),
     possuiCnh: v.optional(v.boolean()),
 
+    // Dados profissionais - Pessoa Física
+    empresa: v.optional(v.string()),
+    cargo: v.optional(v.string()),
+    naturezaOcupacao: v.optional(v.string()),
+
     // Dados pessoais - Pessoa Jurídica (campos específicos + comuns separados)
     cnpjPJ: v.optional(v.string()),
     emailPJ: v.optional(v.string()),

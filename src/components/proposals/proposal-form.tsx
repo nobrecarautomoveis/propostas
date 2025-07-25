@@ -220,10 +220,10 @@ const formSchema = z.object({
   estadoCivil: z.string().optional(),
   possuiCnh: z.boolean().optional(),
 
-  // Dados profissionais - Pessoa Física
-  empresa: z.string().optional(),
-  cargo: z.string().optional(),
-  naturezaOcupacao: z.string().optional(),
+  // Dados profissionais - Pessoa Física (TEMPORARIAMENTE DESABILITADOS PARA TESTE)
+  // empresa: z.string().optional(),
+  // cargo: z.string().optional(),
+  // naturezaOcupacao: z.string().optional(),
 
   // Dados pessoais - Pessoa Jurídica (campos específicos + comuns)
   cnpjPJ: z.string().optional().refine((value) => {
