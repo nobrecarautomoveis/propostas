@@ -370,14 +370,15 @@ export function ProposalList() {
                   <Table>
                     <TableHeader className="bg-muted/50">
                       <TableRow>
-                        <TableHead className="w-[120px] font-semibold py-4 text-center">Nº Proposta</TableHead>
-                        <TableHead className="w-[100px] font-semibold py-4 text-center">Data</TableHead>
+                        <TableHead className="w-[100px] font-semibold py-4 text-center">Nº Proposta</TableHead>
+                        <TableHead className="w-[80px] font-semibold py-4 text-center">Data</TableHead>
                         <TableHead className="w-[180px] hidden lg:table-cell font-semibold py-4 text-center">Criado por</TableHead>
-                        <TableHead className="w-[140px] font-semibold py-4 text-center">Tipo</TableHead>
-                        <TableHead className="min-w-[200px] font-semibold py-4 text-center">Marca/Modelo</TableHead>
-                        <TableHead className="w-[80px] hidden md:table-cell font-semibold py-4 text-center">Ano</TableHead>
+                        <TableHead className="w-[110px] font-semibold py-4 text-center">Tipo</TableHead>
+                        <TableHead className="w-[220px] font-semibold py-4 text-center">Nome</TableHead>
+                        <TableHead className="min-w-[240px] font-semibold py-4 text-center">Marca/Modelo</TableHead>
+                        <TableHead className="w-[70px] hidden md:table-cell font-semibold py-4 text-center">Ano</TableHead>
                         <TableHead className="w-[130px] hidden md:table-cell font-semibold py-4 text-center">Valor</TableHead>
-                        <TableHead className="w-[120px] font-semibold py-4 text-center">Status</TableHead>
+                        <TableHead className="w-[100px] font-semibold py-4 text-center">Status</TableHead>
                         <TableHead className="w-[60px] py-4 text-center"><span className="sr-only">Ações</span></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -385,7 +386,9 @@ export function ProposalList() {
                         {filteredProposals.length > 0 ? (
                             filteredProposals.map((proposal) => (
                                 <TableRow key={proposal._id} className="hover:bg-muted/50">
-                                    <TableCell className="font-medium text-sm py-3 text-center">{proposal.proposalNumber}</TableCell>
+                                    <TableCell className="font-medium text-sm py-3 text-center">
+                                        {proposal.proposalNumber.replace('PROP-', '')}
+                                    </TableCell>
                                     <TableCell className="text-sm py-3 text-center">{format(new Date(proposal.dateAdded), 'dd/MM')}</TableCell>
                                     <TableCell className="hidden lg:table-cell py-3">
                                         <div className="flex items-center gap-2">
@@ -408,6 +411,14 @@ export function ProposalList() {
                                         <span className="inline-block px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
                                             {proposal.proposalType === 'financing' ? 'Financ.' : 'Refinanc.'}
                                         </span>
+                                    </TableCell>
+                                    <TableCell className="py-3">
+                                        <div className="font-medium text-sm truncate">
+                                            {proposal.tipoPessoa === 'fisica'
+                                                ? (proposal.nome || 'Não informado')
+                                                : (proposal.razaoSocial || 'Não informado')
+                                            }
+                                        </div>
                                     </TableCell>
                                     <TableCell className="py-3">
                                         <div className="space-y-1">
