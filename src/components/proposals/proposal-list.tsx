@@ -370,16 +370,16 @@ export function ProposalList() {
                   <Table>
                     <TableHeader className="bg-muted/50">
                       <TableRow>
-                        <TableHead className="w-[100px] font-semibold py-4 text-center">Nº Proposta</TableHead>
-                        <TableHead className="w-[80px] font-semibold py-4 text-center">Data</TableHead>
-                        <TableHead className="w-[180px] hidden lg:table-cell font-semibold py-4 text-center">Criado por</TableHead>
-                        <TableHead className="w-[110px] font-semibold py-4 text-center">Tipo</TableHead>
-                        <TableHead className="w-[220px] font-semibold py-4 text-center">Nome</TableHead>
-                        <TableHead className="min-w-[240px] font-semibold py-4 text-center">Marca/Modelo</TableHead>
-                        <TableHead className="w-[70px] hidden md:table-cell font-semibold py-4 text-center">Ano</TableHead>
-                        <TableHead className="w-[130px] hidden md:table-cell font-semibold py-4 text-center">Valor</TableHead>
-                        <TableHead className="w-[100px] font-semibold py-4 text-center">Status</TableHead>
-                        <TableHead className="w-[60px] py-4 text-center"><span className="sr-only">Ações</span></TableHead>
+                        <TableHead className="w-[80px] font-semibold py-4 text-center">Nº</TableHead>
+                        <TableHead className="w-[70px] font-semibold py-4 text-center">Data</TableHead>
+                        <TableHead className="w-[140px] hidden xl:table-cell font-semibold py-4 text-center">Criado por</TableHead>
+                        <TableHead className="w-[90px] font-semibold py-4 text-center">Tipo</TableHead>
+                        <TableHead className="w-[160px] font-semibold py-4 text-center">Nome</TableHead>
+                        <TableHead className="min-w-[180px] font-semibold py-4 text-center">Marca/Modelo</TableHead>
+                        <TableHead className="w-[60px] hidden lg:table-cell font-semibold py-4 text-center">Ano</TableHead>
+                        <TableHead className="w-[100px] hidden lg:table-cell font-semibold py-4 text-center">Valor</TableHead>
+                        <TableHead className="w-[80px] font-semibold py-4 text-center">Status</TableHead>
+                        <TableHead className="w-[50px] py-4 text-center"><span className="sr-only">Ações</span></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -390,7 +390,7 @@ export function ProposalList() {
                                         {proposal.proposalNumber.replace('PROP-', '')}
                                     </TableCell>
                                     <TableCell className="text-sm py-3 text-center">{format(new Date(proposal.dateAdded), 'dd/MM')}</TableCell>
-                                    <TableCell className="hidden lg:table-cell py-3">
+                                    <TableCell className="hidden xl:table-cell py-3">
                                         <div className="flex items-center gap-2">
                                             <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                                                 <span className="text-xs font-medium text-primary">
@@ -426,16 +426,20 @@ export function ProposalList() {
                                             <div className="text-xs text-muted-foreground truncate">{proposal.modelName || proposal.model}</div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="hidden md:table-cell text-sm py-3 text-center">
+                                    <TableCell className="hidden lg:table-cell text-sm py-3 text-center">
                                         {typeof proposal.modelYear === 'string' && proposal.modelYear.includes('-') ? proposal.modelYear.split('-')[0] : proposal.modelYear}
                                     </TableCell>
-                                    <TableCell className="hidden md:table-cell text-sm py-3 font-medium text-center">
-                                        {proposal.valorFinanciar || 'N/A'}
+                                    <TableCell className="hidden lg:table-cell text-sm py-3 font-medium text-center">
+                                        <div className="truncate">
+                                            {proposal.valorFinanciar || 'N/A'}
+                                        </div>
                                     </TableCell>
                                     <TableCell className="py-3 text-center">
-                                        <Badge variant={statusVariant[proposal.status] || 'outline'} className="text-xs">
-                                            {proposal.status}
-                                        </Badge>
+                                        <div className="truncate">
+                                            <Badge variant={statusVariant[proposal.status] || 'outline'} className="text-xs">
+                                                {proposal.status}
+                                            </Badge>
+                                        </div>
                                     </TableCell>
                                     <TableCell className="text-center">
                                         <DropdownMenu>
