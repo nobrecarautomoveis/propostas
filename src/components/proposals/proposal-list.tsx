@@ -78,6 +78,7 @@ export function ProposalList() {
     // Mutations para criar, atualizar e excluir propostas
     const createProposalMutation = useMutation(api.proposals.createProposal);
     const updateProposalMutation = useMutation(api.proposals.updateProposal);
+    const updateBankAnalysisMutation = useMutation(api.proposals.updateBankAnalysis);
     const deleteProposalMutation = useMutation(api.proposals.deleteProposal);
 
     const handleFormSubmit = async (data: ProposalFormData) => {
@@ -110,11 +111,58 @@ export function ProposalList() {
                     ...data
                 });
 
+                // Extrair campos de análise bancária
+                const {
+                  bancoBv,
+                  bancoSantander,
+                  bancoPan,
+                  bancoBradesco,
+                  bancoC6,
+                  bancoItau,
+                  bancoCash,
+                  bancoKunna,
+                  bancoViaCerta,
+                  bancoOmni,
+                  bancoDaycoval,
+                  bancoSim,
+                  bancoCreditas,
+                  ...restData
+                } = data;
+
+                // Atualizar dados gerais
                 await updateProposalMutation({
                     proposalId: editingProposal._id,
                     userId: currentUser._id as Id<"users">,
-                    ...data
+                    ...restData
                 });
+
+                // Se houver dados bancários, atualize-os separadamente
+                const bankData = {
+                  bancoBv,
+                  bancoSantander,
+                  bancoPan,
+                  bancoBradesco,
+                  bancoC6,
+                  bancoItau,
+                  bancoCash,
+                  bancoKunna,
+                  bancoViaCerta,
+                  bancoOmni,
+                  bancoDaycoval,
+                  bancoSim,
+                  bancoCreditas,
+                };
+
+                // Verificar se tem algum campo de banco definido
+                const hasBankData = Object.values(bankData).some(value => value !== undefined);
+                
+                if (hasBankData) {
+                  await updateBankAnalysisMutation({
+                    proposalId: editingProposal._id,
+                    userId: currentUser._id as Id<"users">,
+                    ...bankData
+                  });
+                }
 
                 toast({
                     title: "Proposta Atualizada",
@@ -125,11 +173,57 @@ export function ProposalList() {
                 console.log("🔄 Forçando atualização da lista...");
                 forceRefresh();
             } else {
+                // Extrair campos de análise bancária para novas propostas
+                const {
+                  bancoBv,
+                  bancoSantander,
+                  bancoPan,
+                  bancoBradesco,
+                  bancoC6,
+                  bancoItau,
+                  bancoCash,
+                  bancoKunna,
+                  bancoViaCerta,
+                  bancoOmni,
+                  bancoDaycoval,
+                  bancoSim,
+                  bancoCreditas,
+                  ...restData
+                } = data;
+
                 // Cria nova proposta
-                await createProposalMutation({
-                    ...data,
+                const result = await createProposalMutation({
+                    ...restData,
                     userId: currentUser._id as Id<"users">
                 });
+
+                // Se houver dados bancários, atualize-os separadamente
+                const bankData = {
+                  bancoBv,
+                  bancoSantander,
+                  bancoPan,
+                  bancoBradesco,
+                  bancoC6,
+                  bancoItau,
+                  bancoCash,
+                  bancoKunna,
+                  bancoViaCerta,
+                  bancoOmni,
+                  bancoDaycoval,
+                  bancoSim,
+                  bancoCreditas,
+                };
+
+                // Verificar se tem algum campo de banco definido
+                const hasBankData = Object.values(bankData).some(value => value !== undefined);
+                
+                if (hasBankData && result?.proposalId) {
+                  await updateBankAnalysisMutation({
+                    proposalId: result.proposalId,
+                    userId: currentUser._id as Id<"users">,
+                    ...bankData
+                  });
+                }
 
                 toast({
                     title: "Proposta Criada",

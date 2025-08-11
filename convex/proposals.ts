@@ -200,6 +200,21 @@ export const createProposal = mutation({
     // Tipo de pessoa
     tipoPessoa: v.optional(v.string()),
 
+    // Análise Bancária - Aprovação/Recusa por banco
+    bancoBv: v.optional(v.boolean()),
+    bancoSantander: v.optional(v.boolean()),
+    bancoPan: v.optional(v.boolean()),
+    bancoBradesco: v.optional(v.boolean()),
+    bancoC6: v.optional(v.boolean()),
+    bancoItau: v.optional(v.boolean()),
+    bancoCash: v.optional(v.boolean()),
+    bancoKunna: v.optional(v.boolean()),
+    bancoViaCerta: v.optional(v.boolean()),
+    bancoOmni: v.optional(v.boolean()),
+    bancoDaycoval: v.optional(v.boolean()),
+    bancoSim: v.optional(v.boolean()),
+    bancoCreditas: v.optional(v.boolean()),
+
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
@@ -302,6 +317,21 @@ export const updateProposal = mutation({
     // Tipo de pessoa
     tipoPessoa: v.optional(v.string()),
 
+    // Análise Bancária - Aprovação/Recusa por banco
+    bancoBv: v.optional(v.boolean()),
+    bancoSantander: v.optional(v.boolean()),
+    bancoPan: v.optional(v.boolean()),
+    bancoBradesco: v.optional(v.boolean()),
+    bancoC6: v.optional(v.boolean()),
+    bancoItau: v.optional(v.boolean()),
+    bancoCash: v.optional(v.boolean()),
+    bancoKunna: v.optional(v.boolean()),
+    bancoViaCerta: v.optional(v.boolean()),
+    bancoOmni: v.optional(v.boolean()),
+    bancoDaycoval: v.optional(v.boolean()),
+    bancoSim: v.optional(v.boolean()),
+    bancoCreditas: v.optional(v.boolean()),
+
     userId: v.id("users"), // ID do usuário que está atualizando a proposta
   },
   handler: async (ctx, args) => {
@@ -398,6 +428,47 @@ export const updateProposalUser = mutation({
     await ctx.db.patch(args.proposalId, {
       salespersonId: args.newUserId
     });
+  },
+});
+
+// Mutation para atualizar apenas os campos de análise bancária
+export const updateBankAnalysis = mutation({
+  args: {
+    proposalId: v.id("proposals"),
+    bancoBv: v.optional(v.boolean()),
+    bancoSantander: v.optional(v.boolean()),
+    bancoPan: v.optional(v.boolean()),
+    bancoBradesco: v.optional(v.boolean()),
+    bancoC6: v.optional(v.boolean()),
+    bancoItau: v.optional(v.boolean()),
+    bancoCash: v.optional(v.boolean()),
+    bancoKunna: v.optional(v.boolean()),
+    bancoViaCerta: v.optional(v.boolean()),
+    bancoOmni: v.optional(v.boolean()),
+    bancoDaycoval: v.optional(v.boolean()),
+    bancoSim: v.optional(v.boolean()),
+    bancoCreditas: v.optional(v.boolean()),
+    userId: v.id("users"), // ID do usuário que está atualizando a proposta
+  },
+  handler: async (ctx, args) => {
+    const { proposalId, userId, ...updates } = args;
+    
+    // Verifica se a proposta existe
+    const proposal = await ctx.db.get(proposalId);
+    if (!proposal) {
+      throw new Error("Proposta não encontrada.");
+    }
+
+    // Verifica se o usuário tem permissão para atualizar esta proposta
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error("Usuário não encontrado.");
+    }
+
+    // Atualiza apenas os campos de análise bancária
+    await ctx.db.patch(proposalId, updates);
+
+    return { success: true };
   },
 });
 

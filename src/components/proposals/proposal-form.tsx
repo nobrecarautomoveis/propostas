@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -269,7 +270,20 @@ const formSchema = z.object({
   razaoSocial: z.string().optional(),
   nomeFantasia: z.string().optional(),
 
-
+  // Análise Bancária - Aprovação/Recusa por banco
+  bancoBv: z.boolean().optional(),
+  bancoSantander: z.boolean().optional(),
+  bancoPan: z.boolean().optional(),
+  bancoBradesco: z.boolean().optional(),
+  bancoC6: z.boolean().optional(),
+  bancoItau: z.boolean().optional(),
+  bancoCash: z.boolean().optional(),
+  bancoKunna: z.boolean().optional(),
+  bancoViaCerta: z.boolean().optional(),
+  bancoOmni: z.boolean().optional(),
+  bancoDaycoval: z.boolean().optional(),
+  bancoSim: z.boolean().optional(),
+  bancoCreditas: z.boolean().optional(),
 
   // Campo para controlar tipo de pessoa
   tipoPessoa: z.enum(['fisica', 'juridica']).default('fisica'),
@@ -1158,6 +1172,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
 
     // Validação básica dos campos obrigatórios
     let hasErrors = false;
+    let formatErrors = false;
 
     // Validar campos básicos do veículo
     const requiredFields = [
@@ -1227,6 +1242,49 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
         }
       });
 
+      // Verificar formato do CPF preenchido
+      const cpfPF = form.getValues('cpfPF');
+      if (cpfPF && cpfPF.trim() !== '') {
+        const raw = cpfPF.replace(/\D/g, '');
+        if (raw.length !== 11 || /^(\d)\1+$/.test(raw)) {
+          form.setError('cpfPF', { type: 'manual', message: 'CPF inválido. Verifique o formato.' });
+          formatErrors = true;
+        } else {
+          // Validar dígitos verificadores
+          let sum = 0;
+          let rest;
+          for (let i = 1; i <= 9; i++) sum += parseInt(raw.substring(i-1, i)) * (11 - i);
+          rest = (sum * 10) % 11;
+          if ((rest === 10) || (rest === 11)) rest = 0;
+          if (rest !== parseInt(raw.substring(9, 10))) {
+            form.setError('cpfPF', { type: 'manual', message: 'CPF inválido. Dígitos verificadores incorretos.' });
+            formatErrors = true;
+          }
+          sum = 0;
+          for (let i = 1; i <= 10; i++) sum += parseInt(raw.substring(i-1, i)) * (12 - i);
+          rest = (sum * 10) % 11;
+          if ((rest === 10) || (rest === 11)) rest = 0;
+          if (rest !== parseInt(raw.substring(10, 11))) {
+            form.setError('cpfPF', { type: 'manual', message: 'CPF inválido. Dígitos verificadores incorretos.' });
+            formatErrors = true;
+          }
+        }
+      }
+
+      // Verificar formato do RG preenchido
+      const rg = form.getValues('rg');
+      if (rg && rg.trim() !== '' && !validateRG(rg)) {
+        form.setError('rg', { type: 'manual', message: 'RG inválido. Verifique o formato.' });
+        formatErrors = true;
+      }
+
+      // Verificar formato do e-mail preenchido
+      const emailPF = form.getValues('emailPF');
+      if (emailPF && emailPF.trim() !== '' && !z.string().email().safeParse(emailPF).success) {
+        form.setError('emailPF', { type: 'manual', message: 'E-mail inválido. Formato incorreto.' });
+        formatErrors = true;
+      }
+
     } else if (tipoPessoa === 'juridica') {
       const camposPJ = [
         { field: 'cnpjPJ', message: 'CNPJ é obrigatório.' },
@@ -1246,10 +1304,77 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
           hasErrors = true;
         }
       });
+
+      // Verificar formato do CNPJ preenchido
+      const cnpjPJ = form.getValues('cnpjPJ');
+      if (cnpjPJ && cnpjPJ.trim() !== '') {
+        const raw = cnpjPJ.replace(/\D/g, '');
+        
+        // Verificação do tamanho
+        if (raw.length !== 14) {
+          form.setError('cnpjPJ', { type: 'manual', message: 'CNPJ inválido. Verifique o formato.' });
+          formatErrors = true;
+        } 
+        // Verificação de dígitos repetidos
+        else if (/^(\d)\1+$/.test(raw)) {
+          form.setError('cnpjPJ', { type: 'manual', message: 'CNPJ inválido. Dígitos não podem ser todos iguais.' });
+          formatErrors = true;
+        } 
+        // Verificação dos dígitos verificadores
+        else {
+          let length = raw.length - 2;
+          let numbers = raw.substring(0, length);
+          let digits = raw.substring(length);
+          let sum = 0;
+          let pos = length - 7;
+          
+          for (let i = length; i >= 1; i--) {
+            sum += parseInt(numbers.charAt(length - i)) * pos--;
+            if (pos < 2) pos = 9;
+          }
+          
+          let result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+          if (result !== parseInt(digits.charAt(0))) {
+            form.setError('cnpjPJ', { type: 'manual', message: 'CNPJ inválido. Dígitos verificadores incorretos.' });
+            formatErrors = true;
+          } else {
+            length = length + 1;
+            numbers = raw.substring(0, length);
+            sum = 0;
+            pos = length - 7;
+            
+            for (let i = length; i >= 1; i--) {
+              sum += parseInt(numbers.charAt(length - i)) * pos--;
+              if (pos < 2) pos = 9;
+            }
+            
+            result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+            if (result !== parseInt(digits.charAt(1))) {
+              form.setError('cnpjPJ', { type: 'manual', message: 'CNPJ inválido. Dígitos verificadores incorretos.' });
+              formatErrors = true;
+            }
+          }
+        }
+      }
+
+      // Verificar formato do e-mail preenchido
+      const emailPJ = form.getValues('emailPJ');
+      if (emailPJ && emailPJ.trim() !== '' && !z.string().email().safeParse(emailPJ).success) {
+        form.setError('emailPJ', { type: 'manual', message: 'E-mail inválido. Formato incorreto.' });
+        formatErrors = true;
+      }
+    }
+
+    if (formatErrors) {
+      toast({
+        title: "Campos com formato inválido",
+        description: "Por favor, corrija os campos destacados com formato incorreto.",
+        variant: "destructive"
+      });
+      return;
     }
 
     if (hasErrors) {
-
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos obrigatórios destacados em vermelho.",
@@ -1313,6 +1438,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
       <TabsList className="mb-4">
         <TabsTrigger value="veiculo">Dados do Veículo</TabsTrigger>
         <TabsTrigger value="pessoais">Dados Pessoais</TabsTrigger>
+        <TabsTrigger value="bancaria">Análise Bancária</TabsTrigger>
       </TabsList>
       <TabsContent value="veiculo">
         {/* Alerta de erro da API FIPE */}
@@ -2362,6 +2488,238 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                 variant="outline"
                 className="w-full md:w-auto flex items-center gap-2"
                 onClick={() => setTabValue('veiculo')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 12H5m7-7-7 7 7 7"/></svg>
+                <span>Voltar</span>
+              </Button>
+              <Button
+                type="button"
+                className="w-full md:w-auto flex items-center gap-2"
+                onClick={() => setTabValue('bancaria')}
+              >
+                <span>Próximo</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14m-7 7 7-7-7-7"/></svg>
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </TabsContent>
+
+      <TabsContent value="bancaria">
+        {/* Formulário para Análise Bancária */}
+        <Form {...form}>
+          <form onSubmit={handleSubmitWithValidation} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium">Bancos Tradicionais</h3>
+                
+                <FormField control={form.control} name="bancoBv" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>BV</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="BV"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+                
+                <FormField control={form.control} name="bancoSantander" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Santander</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Santander"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+                
+                <FormField control={form.control} name="bancoPan" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Pan</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Pan"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+                
+                <FormField control={form.control} name="bancoBradesco" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Bradesco</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Bradesco"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+                
+                <FormField control={form.control} name="bancoC6" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>C6</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="C6"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+                
+                <FormField control={form.control} name="bancoItau" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Itaú</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Itaú"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+              </div>
+              
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium">Bancos Digitais e Financeiras</h3>
+                
+                <FormField control={form.control} name="bancoCash" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Cash</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Cash"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+                
+                <FormField control={form.control} name="bancoKunna" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Kunna</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Kunna"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+                
+                <FormField control={form.control} name="bancoViaCerta" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Via Certa</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Via Certa"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+                
+                <FormField control={form.control} name="bancoOmni" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Omni</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Omni"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+                
+                <FormField control={form.control} name="bancoDaycoval" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Daycoval</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Daycoval"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+                
+                <FormField control={form.control} name="bancoSim" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Sim</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Sim"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+                
+                <FormField control={form.control} name="bancoCreditas" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Creditas</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Creditas"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row justify-between mt-6 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full md:w-auto flex items-center gap-2"
+                onClick={() => setTabValue('pessoais')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 12H5m7-7-7 7 7 7"/></svg>
                 <span>Voltar</span>

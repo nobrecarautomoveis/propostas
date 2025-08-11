@@ -85,6 +85,21 @@ export default defineSchema({
 
     // Tipo de pessoa
     tipoPessoa: v.optional(v.string()), // 'fisica' ou 'juridica'
+    
+    // Análise Bancária - Aprovação/Recusa por banco
+    bancoBv: v.optional(v.boolean()),
+    bancoSantander: v.optional(v.boolean()),
+    bancoPan: v.optional(v.boolean()),
+    bancoBradesco: v.optional(v.boolean()),
+    bancoC6: v.optional(v.boolean()),
+    bancoItau: v.optional(v.boolean()),
+    bancoCash: v.optional(v.boolean()),
+    bancoKunna: v.optional(v.boolean()),
+    bancoViaCerta: v.optional(v.boolean()),
+    bancoOmni: v.optional(v.boolean()),
+    bancoDaycoval: v.optional(v.boolean()),
+    bancoSim: v.optional(v.boolean()),
+    bancoCreditas: v.optional(v.boolean()),
   })
   .index("by_salesperson", ["salespersonId"])
   .index("by_proposalNumber", ["proposalNumber"]),
