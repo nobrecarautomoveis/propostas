@@ -642,7 +642,7 @@ const brazilianStates = [
 ];
 
 export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
-  const [tabValue, setTabValue] = useState<'veiculo' | 'pessoais'>('veiculo');
+  const [tabValue, setTabValue] = useState<'veiculo' | 'pessoais' | 'bancaria'>('veiculo');
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currencyValue, setCurrencyValue] = useState('');
@@ -1434,16 +1434,17 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
 
   return (
     <>
-    <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
-      <TabsList className="mb-4">
-        <TabsTrigger value="veiculo">Dados do Veículo</TabsTrigger>
-        <TabsTrigger value="pessoais">Dados Pessoais</TabsTrigger>
-        <TabsTrigger value="bancaria">Análise Bancária</TabsTrigger>
-      </TabsList>
-      <TabsContent value="veiculo">
+    <div className="w-full">
+      <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
+        <TabsList className="mb-6 w-full grid grid-cols-1 sm:grid-cols-3 h-auto sm:h-10">
+          <TabsTrigger value="veiculo" className="text-xs sm:text-sm">Dados do Veículo</TabsTrigger>
+          <TabsTrigger value="pessoais" className="text-xs sm:text-sm">Dados Pessoais</TabsTrigger>
+          <TabsTrigger value="bancaria" className="text-xs sm:text-sm">Análise Bancária</TabsTrigger>
+        </TabsList>
+      <TabsContent value="veiculo" className="px-0">
         {/* Alerta de erro da API FIPE */}
         {fipeApiError && (
-          <Alert variant="destructive" className="mb-4">
+          <Alert variant="destructive" className="mb-6">
             <Terminal className="h-4 w-4" />
             <AlertTitle>Problema com API FIPE</AlertTitle>
             <AlertDescription>
@@ -1454,8 +1455,8 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
 
         {/* Formulário original completo de Dados do Veículo */}
         <Form {...form}>
-          <form onSubmit={handleSubmitWithValidation} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmitWithValidation} className="space-y-6 sm:space-y-8 p-4 sm:p-6 lg:p-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
               <FormField control={form.control} name="proposalType" render={({ field }) => (
                   <FormItem>
                       <FormLabel className="font-medium">Tipo de Proposta</FormLabel>
@@ -1644,7 +1645,6 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       <FormMessage />
                   </FormItem>
               )}/>
-              <FormField control={form.control} name="bodywork" render={({ field }) => (<FormItem><FormLabel className="font-medium">Carroceria (opcional)</FormLabel><FormControl><Input placeholder="Ex: SUV" {...field} /></FormControl><FormMessage /></FormItem>)}/>
               <FormField control={form.control} name="manufactureYear" render={({ field }) => (
                   <FormItem>
                       <FormLabel className="font-medium">Ano Fabricação</FormLabel>
@@ -1657,6 +1657,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       <FormMessage />
                   </FormItem>
               )}/>
+              <FormField control={form.control} name="bodywork" render={({ field }) => (<FormItem><FormLabel className="font-medium">Carroceria (opcional)</FormLabel><FormControl><Input placeholder="Ex: SUV" {...field} /></FormControl><FormMessage /></FormItem>)}/>
               <FormField control={form.control} name="version" render={({ field }) => (<FormItem><FormLabel className="font-medium">Versão (opcional)</FormLabel><FormControl><Input placeholder="Ex: Highline" {...field} /></FormControl><FormMessage /></FormItem>)}/>
               <FormField control={form.control} name="fuel" render={({ field }) => (
                   <FormItem>
@@ -1753,11 +1754,11 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               )}/>
             </div>
             {/* O botão de submit foi removido desta aba, agora está apenas em Dados Pessoais */}
-        <div className="flex justify-end mt-6">
+        <div className="flex flex-col sm:flex-row justify-end mt-8 gap-3">
           <Button
             type="button"
             variant="ghost"
-            className="w-full md:w-auto flex items-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200 px-6 py-2"
             onClick={() => setTabValue('pessoais')}
           >
             <span>Avançar</span>
@@ -1782,10 +1783,10 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
           </div>
         )}
       </TabsContent>
-      <TabsContent value="pessoais">
+      <TabsContent value="pessoais" className="px-0">
         {/* Formulário de Dados Pessoais com alternância Pessoa Física/Jurídica */}
         <Form {...form}>
-          <form onSubmit={handleSubmitWithValidation} className="space-y-6">
+          <form onSubmit={handleSubmitWithValidation} className="space-y-6 sm:space-y-8 p-4 sm:p-6 lg:p-8">
             {/* Seletor tipo de pessoa */}
             <FormField control={form.control} name="tipoPessoa" render={({ field }) => (
               <FormItem className="mb-4">
@@ -1941,7 +1942,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                 <FormMessage />
               </FormItem>
             )}/>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8">
               {/* Campos Pessoa Física */}
               {tipoPessoa === 'fisica' && <>
                 <FormField control={form.control} name="nome" render={({ field }) => (
@@ -2099,7 +2100,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                   <FormItem>
                     <FormLabel className="font-medium">Endereço</FormLabel>
                     <FormControl>
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-3">
                         <Input
                           placeholder="Digite o CEP"
                           maxLength={9}
@@ -2128,7 +2129,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                               setIsLoadingCepPJ(false);
                             }
                           }}
-                          className="mb-2"
+                          className="w-full"
                         />
                         <Input
                           placeholder="Endereço completo"
@@ -2154,7 +2155,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                         onChange={field.onChange}
                         rows={3}
                         maxLength={1000}
-                        className="resize-y"
+                        className="resize-y w-full min-h-[80px]"
                       />
                     </FormControl>
                     <div className="text-xs text-muted-foreground text-right">
@@ -2366,7 +2367,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       <FormItem>
                         <FormLabel>Endereço</FormLabel>
                         <FormControl>
-                          <div className="flex flex-col gap-2">
+                          <div className="flex flex-col gap-3">
                             <Input
                               placeholder="Digite o CEP"
                               maxLength={9}
@@ -2396,7 +2397,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                                   setIsLoadingCepPF(false);
                                 }
                               }}
-                              className="mb-2"
+                              className="w-full"
                             />
                             <Input
                               placeholder="Endereço completo"
@@ -2413,7 +2414,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
 
                     {/* Dados Profissionais - Pessoa Física */}
                     <div className="col-span-full">
-                      <h3 className="text-base font-medium text-gray-900 mb-3 mt-2 border-b pb-1">
+                      <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 mt-4 sm:mt-6 border-b pb-2">
                         Dados Profissionais
                       </h3>
                     </div>
@@ -2468,7 +2469,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                             onChange={field.onChange}
                             rows={3}
                             maxLength={1000}
-                            className="resize-y"
+                            className="resize-y w-full min-h-[80px]"
                           />
                         </FormControl>
                         <div className="text-xs text-muted-foreground text-right">
@@ -2482,11 +2483,11 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               )}/>
 
             </div>
-            <div className="flex flex-col md:flex-row justify-between mt-6 gap-2">
+            <div className="flex flex-col sm:flex-row justify-between mt-8 gap-3">
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full md:w-auto flex items-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200 px-6 py-2"
                 onClick={() => setTabValue('veiculo')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 12H5m7-7-7 7 7 7"/></svg>
@@ -2494,7 +2495,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               </Button>
               <Button
                 type="button"
-                className="w-full md:w-auto flex items-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200 px-6 py-2"
                 onClick={() => setTabValue('bancaria')}
               >
                 <span>Avançar</span>
@@ -2505,12 +2506,12 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
         </Form>
       </TabsContent>
 
-      <TabsContent value="bancaria">
+      <TabsContent value="bancaria" className="px-0">
         {/* Formulário para Análise Bancária */}
         <Form {...form}>
-          <form onSubmit={handleSubmitWithValidation} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
+          <form onSubmit={handleSubmitWithValidation} className="space-y-6 sm:space-y-8 p-4 sm:p-6 lg:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+              <div className="space-y-4 lg:space-y-6">
                 <h3 className="text-lg font-medium">Bancos Tradicionais</h3>
                 
                 <FormField control={form.control} name="bancoBv" render={({ field }) => (
@@ -2604,7 +2605,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                 )}/>
               </div>
               
-              <div className="space-y-6">
+              <div className="space-y-4 lg:space-y-6">
                 <h3 className="text-lg font-medium">Bancos Digitais e Financeiras</h3>
                 
                 <FormField control={form.control} name="bancoCash" render={({ field }) => (
@@ -2714,11 +2715,11 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               </div>
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between mt-6 gap-2">
+            <div className="flex flex-col sm:flex-row justify-between mt-8 gap-3">
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full md:w-auto flex items-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200 px-6 py-2"
                 onClick={() => setTabValue('pessoais')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 12H5m7-7-7 7 7 7"/></svg>
@@ -2727,7 +2728,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               <Button 
                 type="submit" 
                 disabled={isSubmitting} 
-                className="w-full md:w-auto bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-gray-700"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-gray-700 px-6 py-2"
               >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {initialData ? 'Atualizar Proposta' : 'Enviar Proposta'}
@@ -2774,6 +2775,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+    </div>
     </>
   );
   }
