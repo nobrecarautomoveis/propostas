@@ -1756,8 +1756,8 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
         <div className="flex justify-end mt-6">
           <Button
             type="button"
-            variant="outline"
-            className="w-full md:w-auto flex items-center gap-2"
+            variant="ghost"
+            className="w-full md:w-auto flex items-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
             onClick={() => setTabValue('pessoais')}
           >
             <span>Avançar</span>
@@ -2485,8 +2485,8 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
             <div className="flex flex-col md:flex-row justify-between mt-6 gap-2">
               <Button
                 type="button"
-                variant="outline"
-                className="w-full md:w-auto flex items-center gap-2"
+                variant="ghost"
+                className="w-full md:w-auto flex items-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
                 onClick={() => setTabValue('veiculo')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 12H5m7-7-7 7 7 7"/></svg>
@@ -2494,10 +2494,10 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
               </Button>
               <Button
                 type="button"
-                className="w-full md:w-auto flex items-center gap-2"
+                className="w-full md:w-auto flex items-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
                 onClick={() => setTabValue('bancaria')}
               >
-                <span>Próximo</span>
+                <span>Avançar</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14m-7 7 7-7-7-7"/></svg>
               </Button>
             </div>
@@ -2717,14 +2717,18 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
             <div className="flex flex-col md:flex-row justify-between mt-6 gap-2">
               <Button
                 type="button"
-                variant="outline"
-                className="w-full md:w-auto flex items-center gap-2"
+                variant="ghost"
+                className="w-full md:w-auto flex items-center gap-2 bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200"
                 onClick={() => setTabValue('pessoais')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 12H5m7-7-7 7 7 7"/></svg>
                 <span>Voltar</span>
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="w-full md:w-auto bg-transparent border border-gray-300 text-gray-700 hover:bg-green-500 hover:text-white hover:border-green-500 transition-all duration-200 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-gray-700"
+              >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {initialData ? 'Atualizar Proposta' : 'Enviar Proposta'}
               </Button>
