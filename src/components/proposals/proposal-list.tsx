@@ -460,39 +460,39 @@ export function ProposalList() {
                       </Select>
                   </div>
                 </div>
-                <div className="rounded-md border overflow-x-auto w-full">
+                <div className="rounded-md border w-full overflow-x-auto md:overflow-x-visible">
                   <Table className="w-full">
                     <TableHeader className="bg-muted/50">
                       <TableRow>
-                        <TableHead className="w-[60px] font-semibold py-4 text-center">Nº</TableHead>
-                        <TableHead className="w-[60px] font-semibold py-4 text-center">Data</TableHead>
-                        <TableHead className="w-[120px] hidden xl:table-cell font-semibold py-4 text-center">Criado por</TableHead>
-                        <TableHead className="w-[80px] font-semibold py-4 text-center">Tipo</TableHead>
-                        <TableHead className="w-[140px] font-semibold py-4 text-center">Nome</TableHead>
-                        <TableHead className="w-[150px] font-semibold py-4 text-center">Marca/Modelo</TableHead>
-                        <TableHead className="w-[50px] hidden lg:table-cell font-semibold py-4 text-center">Ano</TableHead>
-                        <TableHead className="w-[90px] hidden lg:table-cell font-semibold py-4 text-center">Valor</TableHead>
-                        <TableHead className="w-[70px] font-semibold py-4 text-center">Status</TableHead>
-                        <TableHead className="w-[50px] py-4 text-center"><span className="sr-only">Ações</span></TableHead>
+                        <TableHead className="w-[50px] font-semibold py-3 px-2 text-center text-xs">Nº</TableHead>
+                        <TableHead className="w-[55px] font-semibold py-3 px-2 text-center text-xs">Data</TableHead>
+                        <TableHead className="w-[100px] hidden xl:table-cell font-semibold py-3 px-2 text-center text-xs">Criado por</TableHead>
+                        <TableHead className="w-[65px] font-semibold py-3 px-2 text-center text-xs">Tipo</TableHead>
+                        <TableHead className="flex-1 min-w-[120px] font-semibold py-3 px-2 text-center text-xs">Nome</TableHead>
+                        <TableHead className="flex-1 min-w-[130px] font-semibold py-3 px-2 text-center text-xs">Marca/Modelo</TableHead>
+                        <TableHead className="w-[45px] hidden lg:table-cell font-semibold py-3 px-2 text-center text-xs">Ano</TableHead>
+                        <TableHead className="w-[75px] hidden lg:table-cell font-semibold py-3 px-2 text-center text-xs">Valor</TableHead>
+                        <TableHead className="w-[65px] font-semibold py-3 px-2 text-center text-xs">Status</TableHead>
+                        <TableHead className="w-[45px] py-3 px-2 text-center"><span className="sr-only">Ações</span></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredProposals.length > 0 ? (
                             filteredProposals.map((proposal) => (
                                 <TableRow key={proposal._id} className="hover:bg-muted/50">
-                                    <TableCell className="font-medium text-sm py-3 text-center">
+                                    <TableCell className="font-medium text-xs py-2 px-2 text-center">
                                         {proposal.proposalNumber.replace('PROP-', '')}
                                     </TableCell>
-                                    <TableCell className="text-sm py-3 text-center">{format(new Date(proposal.dateAdded), 'dd/MM')}</TableCell>
-                                    <TableCell className="hidden xl:table-cell py-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                    <TableCell className="text-xs py-2 px-2 text-center">{format(new Date(proposal.dateAdded), 'dd/MM')}</TableCell>
+                                    <TableCell className="hidden xl:table-cell py-2 px-2">
+                                        <div className="flex items-center gap-1">
+                                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                                                 <span className="text-xs font-medium text-primary">
                                                     {proposal.createdBy?.name ? proposal.createdBy.name.charAt(0).toUpperCase() : '?'}
                                                 </span>
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-sm font-medium truncate">
+                                                <span className="text-xs font-medium truncate">
                                                     {proposal.createdBy?.name || 'Não encontrado'}
                                                 </span>
                                                 <span className="text-xs text-muted-foreground truncate">
@@ -501,41 +501,41 @@ export function ProposalList() {
                                             </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-sm py-3 text-center">
-                                        <span className="inline-block px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
+                                    <TableCell className="text-xs py-2 px-2 text-center">
+                                        <span className="inline-block px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
                                             {proposal.proposalType === 'financing' ? 'Financ.' : 'Refinanc.'}
                                         </span>
                                     </TableCell>
-                                    <TableCell className="py-3">
-                                        <div className="font-medium text-sm truncate">
+                                    <TableCell className="py-2 px-2">
+                                        <div className="font-medium text-xs truncate">
                                             {proposal.tipoPessoa === 'fisica'
                                                 ? (proposal.nome || 'Não informado')
                                                 : (proposal.razaoSocial || 'Não informado')
                                             }
                                         </div>
                                     </TableCell>
-                                    <TableCell className="py-3">
-                                        <div className="space-y-1">
-                                            <div className="font-medium text-sm truncate">{proposal.brandName || proposal.brand}</div>
+                                    <TableCell className="py-2 px-2">
+                                        <div className="space-y-0.5">
+                                            <div className="font-medium text-xs truncate">{proposal.brandName || proposal.brand}</div>
                                             <div className="text-xs text-muted-foreground truncate">{proposal.modelName || proposal.model}</div>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="hidden lg:table-cell text-sm py-3 text-center">
+                                    <TableCell className="hidden lg:table-cell text-xs py-2 px-2 text-center">
                                         {typeof proposal.modelYear === 'string' && proposal.modelYear.includes('-') ? proposal.modelYear.split('-')[0] : proposal.modelYear}
                                     </TableCell>
-                                    <TableCell className="hidden lg:table-cell text-sm py-3 font-medium text-center">
+                                    <TableCell className="hidden lg:table-cell text-xs py-2 px-2 font-medium text-center">
                                         <div className="truncate">
                                             {proposal.valorFinanciar || 'N/A'}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="py-3 text-center">
+                                    <TableCell className="py-2 px-2 text-center">
                                         <div className="truncate">
                                             <Badge variant={statusVariant[proposal.status] || 'outline'} className="text-xs">
                                                 {proposal.status}
                                             </Badge>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center">
+                                    <TableCell className="text-center py-2 px-2">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="icon">
