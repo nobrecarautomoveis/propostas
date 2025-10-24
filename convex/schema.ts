@@ -52,7 +52,10 @@ export default defineSchema({
     telefoneReferenciaPF: v.optional(v.string()),
     cepPF: v.optional(v.string()),
     enderecoPF: v.optional(v.string()),
+    numeroPF: v.optional(v.string()), // Número do endereço - Pessoa Física
+    referenciaPF: v.optional(v.string()), // Referência do endereço - Pessoa Física
     observacoesPF: v.optional(v.string()), // Observações específicas - Pessoa Física
+    comentariosPF: v.optional(v.string()), // Comentários específicos - Pessoa Física
 
     nome: v.optional(v.string()), // Nome completo
     dataNascimento: v.optional(v.string()), // Data de nascimento
@@ -78,7 +81,10 @@ export default defineSchema({
     telefoneReferenciaPJ: v.optional(v.string()),
     cepPJ: v.optional(v.string()),
     enderecoPJ: v.optional(v.string()),
+    numeroPJ: v.optional(v.string()), // Número do endereço - Pessoa Jurídica
+    referenciaPJ: v.optional(v.string()), // Referência do endereço - Pessoa Jurídica
     observacoesPJ: v.optional(v.string()), // Observações específicas - Pessoa Jurídica
+    comentariosPJ: v.optional(v.string()), // Comentários específicos - Pessoa Jurídica
 
     razaoSocial: v.optional(v.string()), // Razão social
     nomeFantasia: v.optional(v.string()), // Nome fantasia

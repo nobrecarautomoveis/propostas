@@ -166,12 +166,10 @@ const formSchema = z.object({
   fuel: z.string({ required_error: "Selecione o combustível." }).min(1, "Selecione o combustível."),
   transmission: z.string({ required_error: "Selecione a transmissão." }).min(1, "Selecione a transmissão."),
   color: z.string({ required_error: "A cor é obrigatória." }).min(2, "Mínimo 2 caracteres."),
-  value: z.coerce.number({ required_error: "O valor é obrigatório." }).positive("O valor deve ser positivo."),
-  valorFinanciar: z.string({ required_error: "O valor a financiar é obrigatório." }).min(1, "Informe o valor a financiar."),
-  licensingLocation: z.string({ required_error: "Selecione o estado." }).min(1, "Selecione o estado."),
-  status: z.enum(['Em Análise', 'Aprovada', 'Recusada'], { required_error: "Selecione o status da proposta." }),
-
-  // Dados pessoais - Pessoa Física (campos específicos + comuns)
+    value: z.coerce.number({ required_error: "O valor é obrigatório." }).positive("O valor deve ser positivo."),
+    valorFinanciar: z.string({ required_error: "O valor a financiar é obrigatório." }).min(1, "Informe o valor a financiar."),
+    licensingLocation: z.string({ required_error: "Selecione o estado." }).min(1, "Selecione o estado."),
+    status: z.enum(['Digitando', 'Em Análise', 'Aprovada', 'Recusada'], { required_error: "Selecione o status da proposta." }),  // Dados pessoais - Pessoa Física (campos específicos + comuns)
   cpfPF: z.string().optional().refine((value) => {
     if (!value) return true; // Se vazio, deixa a validação condicional cuidar
     const raw = value.replace(/\D/g, '');
@@ -198,10 +196,17 @@ const formSchema = z.object({
   telefoneReferenciaPF: z.string().optional(),
   cepPF: z.string().optional(),
   enderecoPF: z.string().optional(),
+  numeroPF: z.string().optional(),
+  referenciaPF: z.string().optional(),
   observacoesPF: z.string().optional().refine((value) => {
     if (!value) return true; // Campo opcional
     return value.length <= 1000;
   }, { message: 'Observações devem ter no máximo 1000 caracteres.' }),
+
+  comentariosPF: z.string().optional().refine((value) => {
+    if (!value) return true; // Campo opcional
+    return value.length <= 1000;
+  }, { message: 'Comentários devem ter no máximo 1000 caracteres.' }),
 
   // Dados pessoais - Pessoa Física (serão validados condicionalmente)
   nome: z.string().optional(),
@@ -263,10 +268,17 @@ const formSchema = z.object({
   telefoneReferenciaPJ: z.string().optional(),
   cepPJ: z.string().optional(),
   enderecoPJ: z.string().optional(),
+  numeroPJ: z.string().optional(),
+  referenciaPJ: z.string().optional(),
   observacoesPJ: z.string().optional().refine((value) => {
     if (!value) return true; // Campo opcional
     return value.length <= 1000;
   }, { message: 'Observações devem ter no máximo 1000 caracteres.' }),
+
+  comentariosPJ: z.string().optional().refine((value) => {
+    if (!value) return true; // Campo opcional
+    return value.length <= 1000;
+  }, { message: 'Comentários devem ter no máximo 1000 caracteres.' }),
   razaoSocial: z.string().optional(),
   nomeFantasia: z.string().optional(),
 
@@ -714,7 +726,10 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
       telefoneReferenciaPF: '',
       cepPF: '',
       enderecoPF: '',
+      numeroPF: '',
+      referenciaPF: '',
       observacoesPF: '',
+      comentariosPF: '',
 
       // Dados pessoais - Pessoa Jurídica (novos campos separados)
       cnpjPJ: '',
@@ -723,7 +738,10 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
       telefoneReferenciaPJ: '',
       cepPJ: '',
       enderecoPJ: '',
+      numeroPJ: '',
+      referenciaPJ: '',
       observacoesPJ: '',
+      comentariosPJ: '',
 
       // Dados pessoais - Pessoa Física
       nome: '',
@@ -896,20 +914,19 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
       form.setValue('telefoneReferenciaPF', '');
       form.setValue('cepPF', '');
       form.setValue('enderecoPF', '');
-      form.setValue('observacoesPF', '');
-      form.setValue('nome', '');
-      form.setValue('dataNascimento', '');
-      form.setValue('sexo', '');
-      form.setValue('nomeMae', '');
-      form.setValue('nomePai', '');
-      form.setValue('rg', '');
-      form.setValue('dataEmissaoRg', '');
-      form.setValue('orgaoExpedidor', '');
-      form.setValue('naturalidade', '');
-      form.setValue('estadoCivil', '');
-      form.setValue('possuiCnh', false);
-
-    } else if (previousValue === 'juridica') {
+              form.setValue('observacoesPF', '');
+              form.setValue('comentariosPF', '');
+              form.setValue('nome', '');
+              form.setValue('dataNascimento', '');
+              form.setValue('sexo', '');
+              form.setValue('nomeMae', '');
+              form.setValue('nomePai', '');
+              form.setValue('rg', '');
+              form.setValue('dataEmissaoRg', '');
+              form.setValue('orgaoExpedidor', '');
+              form.setValue('naturalidade', '');
+              form.setValue('estadoCivil', '');
+              form.setValue('possuiCnh', false);    } else if (previousValue === 'juridica') {
       // Estava em PJ, mudando para PF: limpar apenas campos de PJ
       form.setValue('cnpjPJ', '');
       form.setValue('emailPJ', '');
@@ -1747,7 +1764,12 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       <FormLabel className="font-medium">Status</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || ''}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecione o status..." /></SelectTrigger></FormControl>
-                          <SelectContent><SelectItem value="Em Análise">Em Análise</SelectItem><SelectItem value="Aprovada">Aprovada</SelectItem><SelectItem value="Recusada">Recusada</SelectItem></SelectContent>
+                          <SelectContent>
+                            <SelectItem value="Digitando">Digitando</SelectItem>
+                            <SelectItem value="Em Análise">Em Análise</SelectItem>
+                            <SelectItem value="Aprovada">Aprovada</SelectItem>
+                            <SelectItem value="Recusada">Recusada</SelectItem>
+                          </SelectContent>
                       </Select>
                       <FormMessage />
                   </FormItem>
@@ -1829,6 +1851,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                             form.setValue('cepPF', originalData.cepPF || '');
                             form.setValue('enderecoPF', originalData.enderecoPF || '');
                             form.setValue('observacoesPF', originalData.observacoesPF || '');
+                            form.setValue('comentariosPF', originalData.comentariosPF || '');
                             form.setValue('nome', originalData.nome || '');
                             form.setValue('dataNascimento', originalData.dataNascimento || '');
                             form.setValue('sexo', originalData.sexo || '');
@@ -1859,6 +1882,7 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                             form.setValue('cepPJ', originalData.cepPJ || '');
                             form.setValue('enderecoPJ', originalData.enderecoPJ || '');
                             form.setValue('observacoesPJ', originalData.observacoesPJ || '');
+                            form.setValue('comentariosPJ', originalData.comentariosPJ || '');
                             form.setValue('razaoSocial', originalData.razaoSocial || '');
                             form.setValue('nomeFantasia', originalData.nomeFantasia || '');
 
@@ -1895,11 +1919,10 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                             form.setValue('telefoneReferenciaPJ', '');
                             form.setValue('cepPJ', '');
                             form.setValue('enderecoPJ', '');
-                            form.setValue('observacoesPJ', '');
-                            form.setValue('razaoSocial', '');
-                            form.setValue('nomeFantasia', '');
-
-                          } else if (targetType === 'juridica') {
+              form.setValue('observacoesPJ', '');
+              form.setValue('comentariosPJ', '');
+              form.setValue('razaoSocial', '');
+              form.setValue('nomeFantasia', '');                          } else if (targetType === 'juridica') {
                             // Mudando para PJ: limpar apenas campos de PF, manter PJ
                             form.setValue('cpfPF', '');
                             form.setValue('emailPF', '');
@@ -2095,75 +2118,127 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                   </FormItem>
                 )}/>
 
-                {/* Endereço - campo comum */}
-                <FormField control={form.control} name="enderecoPJ" render={({ field }) => (
+                {/* CEP - Pessoa Jurídica */}
+                <FormField control={form.control} name="cepPJ" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium">Endereço</FormLabel>
+                    <FormLabel className="font-medium">CEP</FormLabel>
                     <FormControl>
-                      <div className="flex flex-col gap-3">
-                        <Input
-                          placeholder="Digite o CEP"
-                          maxLength={9}
-                          value={form.watch('cepPJ') || ''}
-                          onChange={async (e) => {
-                            const cep = e.target.value.replace(/\D/g, '');
-                            let maskedCep = cep;
-                            if (cep.length > 5) maskedCep = cep.substring(0,5) + '-' + cep.substring(5,8);
-                            form.setValue('cepPJ', maskedCep);
-
-                            if (cep.length === 8) {
-                              setIsLoadingCepPJ(true);
-                              try {
-                                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-                                const data = await response.json();
-                                if (!data.erro) {
-                                  const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
-                                  form.setValue('enderecoPJ', enderecoCompleto);
-                                } else {
-                                  form.setValue('enderecoPJ', '');
-                                  toast({ title: 'CEP não encontrado', description: 'Verifique o número do CEP.', variant: 'destructive' });
-                                }
-                              } catch {
-                                toast({ title: 'Erro ao buscar CEP', description: 'Não foi possível consultar o CEP.', variant: 'destructive' });
-                              }
-                              setIsLoadingCepPJ(false);
-                            }
-                          }}
-                          className="w-full"
-                        />
-                        <Input
-                          placeholder="Endereço completo"
-                          value={field.value || ''}
-                          onChange={field.onChange}
-                          disabled={isLoadingCepPJ}
-                        />
-                        {isLoadingCepPJ && <span className="text-xs text-muted-foreground">Buscando endereço...</span>}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}/>
-
-                {/* Campo Observações - Pessoa Jurídica */}
-                <FormField control={form.control} name="observacoesPJ" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Observações</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Adicione observações específicas desta proposta..."
+                      <Input
+                        placeholder="Digite o CEP"
+                        maxLength={9}
                         value={field.value || ''}
-                        onChange={field.onChange}
-                        rows={3}
-                        maxLength={1000}
-                        className="resize-y w-full min-h-[80px]"
+                        onChange={async (e) => {
+                          const cep = e.target.value.replace(/\D/g, '');
+                          let maskedCep = cep;
+                          if (cep.length > 5) maskedCep = cep.substring(0,5) + '-' + cep.substring(5,8);
+                          form.setValue('cepPJ', maskedCep);
+
+                          if (cep.length === 8) {
+                            setIsLoadingCepPJ(true);
+                            try {
+                              const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                              const data = await response.json();
+                              if (!data.erro) {
+                                const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+                                form.setValue('enderecoPJ', enderecoCompleto);
+                              } else {
+                                form.setValue('enderecoPJ', '');
+                                toast({ title: 'CEP não encontrado', description: 'Verifique o número do CEP.', variant: 'destructive' });
+                              }
+                            } catch {
+                              toast({ title: 'Erro ao buscar CEP', description: 'Não foi possível consultar o CEP.', variant: 'destructive' });
+                            }
+                            setIsLoadingCepPJ(false);
+                          }
+                        }}
+                        className="w-full"
                       />
                     </FormControl>
-                    <div className="text-xs text-muted-foreground text-right">
-                      {(field.value || '').length}/1000 caracteres
-                    </div>
                     <FormMessage />
                   </FormItem>
                 )}/>
+
+                {/* Endereço Completo - Pessoa Jurídica */}
+                <FormField control={form.control} name="enderecoPJ" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-medium">Endereço Completo</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Endereço completo"
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        disabled={isLoadingCepPJ}
+                      />
+                    </FormControl>
+                    {isLoadingCepPJ && <span className="text-xs text-muted-foreground">Buscando endereço...</span>}
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+
+                {/* Número - Pessoa Jurídica */}
+                <FormField control={form.control} name="numeroPJ" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Número</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite o número" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+
+                {/* Referência - Pessoa Jurídica */}
+                <FormField control={form.control} name="referenciaPJ" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Referência</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Digite a referência" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}/>
+
+
+                {/* Campos de Observações e Comentários - Pessoa Jurídica */}
+                <div className="grid grid-cols-2 col-span-full gap-6">
+                  <FormField control={form.control} name="observacoesPJ" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Observações</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Adicione observações específicas desta proposta..."
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          rows={3}
+                          maxLength={1000}
+                          className="resize-y w-full min-h-[150px]"
+                        />
+                      </FormControl>
+                      <div className="text-xs text-muted-foreground text-right">
+                        {(field.value || '').length}/1000 caracteres
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}/>
+                  <FormField control={form.control} name="comentariosPJ" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Comentários</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Adicione comentários sobre esta proposta..."
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          rows={3}
+                          maxLength={1000}
+                          className="resize-y w-full min-h-[150px]"
+                        />
+                      </FormControl>
+                      <div className="text-xs text-muted-foreground text-right">
+                        {(field.value || '').length}/1000 caracteres
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}/>
+                </div>
               </>}
               {/* Campos comuns */}
               <FormField control={form.control} name="emailPF" render={({ field }) => (
@@ -2362,51 +2437,81 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                    {/* Endereço logo após Estado Civil */}
+                    {/* CEP - Pessoa Física */}
+                    <FormField control={form.control} name="cepPF" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>CEP</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Digite o CEP"
+                            maxLength={9}
+                            value={field.value || ''}
+                            onChange={async (e) => {
+                              const cep = e.target.value.replace(/\D/g, '');
+                              let maskedCep = cep;
+                              if (cep.length > 5) maskedCep = cep.substring(0,5) + '-' + cep.substring(5,8);
+                              form.setValue('cepPF', maskedCep);
+
+                              if (cep.length === 8) {
+                                setIsLoadingCepPF(true);
+                                try {
+                                  const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                                  const data = await response.json();
+                                  if (!data.erro) {
+                                    // Monta endereço completo
+                                    const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+                                    form.setValue('enderecoPF', enderecoCompleto);
+                                  } else {
+                                    form.setValue('enderecoPF', '');
+                                    toast({ title: 'CEP não encontrado', description: 'Verifique o número do CEP.', variant: 'destructive' });
+                                  }
+                                } catch {
+                                  toast({ title: 'Erro ao buscar CEP', description: 'Não foi possível consultar o CEP.', variant: 'destructive' });
+                                }
+                                setIsLoadingCepPF(false);
+                              }
+                            }}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+
+                    {/* Endereço Completo - Pessoa Física */}
                     <FormField control={form.control} name="enderecoPF" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Endereço</FormLabel>
+                        <FormLabel>Endereço Completo</FormLabel>
                         <FormControl>
-                          <div className="flex flex-col gap-3">
-                            <Input
-                              placeholder="Digite o CEP"
-                              maxLength={9}
-                              value={form.watch('cepPF') || ''}
-                              onChange={async (e) => {
-                                const cep = e.target.value.replace(/\D/g, '');
-                                let maskedCep = cep;
-                                if (cep.length > 5) maskedCep = cep.substring(0,5) + '-' + cep.substring(5,8);
-                                form.setValue('cepPF', maskedCep);
+                          <Input
+                            placeholder="Endereço completo"
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                            disabled={isLoadingCepPF}
+                          />
+                        </FormControl>
+                        {isLoadingCepPF && <span className="text-xs text-muted-foreground">Buscando endereço...</span>}
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
 
-                                if (cep.length === 8) {
-                                  setIsLoadingCepPF(true);
-                                  try {
-                                    const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-                                    const data = await response.json();
-                                    if (!data.erro) {
-                                      // Monta endereço completo
-                                      const enderecoCompleto = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
-                                      form.setValue('enderecoPF', enderecoCompleto);
-                                    } else {
-                                      form.setValue('enderecoPF', '');
-                                      toast({ title: 'CEP não encontrado', description: 'Verifique o número do CEP.', variant: 'destructive' });
-                                    }
-                                  } catch {
-                                    toast({ title: 'Erro ao buscar CEP', description: 'Não foi possível consultar o CEP.', variant: 'destructive' });
-                                  }
-                                  setIsLoadingCepPF(false);
-                                }
-                              }}
-                              className="w-full"
-                            />
-                            <Input
-                              placeholder="Endereço completo"
-                              value={field.value || ''}
-                              onChange={field.onChange}
-                              disabled={isLoadingCepPF}
-                            />
-                            {isLoadingCepPF && <span className="text-xs text-muted-foreground">Buscando endereço...</span>}
-                          </div>
+                    {/* Número - Pessoa Física */}
+                    <FormField control={form.control} name="numeroPF" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Número</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite o número" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}/>
+
+                    {/* Referência - Pessoa Física */}
+                    <FormField control={form.control} name="referenciaPF" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Referência</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Digite a referência" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -2458,26 +2563,47 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                       </FormItem>
                     )}/>
 
-                    {/* Campo Observações - Pessoa Física */}
-                    <FormField control={form.control} name="observacoesPF" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Observações</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Adicione observações específicas desta proposta..."
-                            value={field.value || ''}
-                            onChange={field.onChange}
-                            rows={3}
-                            maxLength={1000}
-                            className="resize-y w-full min-h-[80px]"
-                          />
-                        </FormControl>
-                        <div className="text-xs text-muted-foreground text-right">
-                          {(field.value || '').length}/1000 caracteres
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}/>
+                    {/* Campos de Observações e Comentários - Pessoa Física */}
+                    <div className="grid grid-cols-2 col-span-full gap-6">
+                      <FormField control={form.control} name="observacoesPF" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Observações</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Adicione observações específicas desta proposta..."
+                              value={field.value || ''}
+                              onChange={field.onChange}
+                              rows={3}
+                              maxLength={1000}
+                              className="resize-y w-full min-h-[150px]"
+                            />
+                          </FormControl>
+                          <div className="text-xs text-muted-foreground text-right">
+                            {(field.value || '').length}/1000 caracteres
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}/>
+                      <FormField control={form.control} name="comentariosPF" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Comentários</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Adicione comentários sobre esta proposta..."
+                              value={field.value || ''}
+                              onChange={field.onChange}
+                              rows={3}
+                              maxLength={1000}
+                              className="resize-y w-full min-h-[150px]"
+                            />
+                          </FormControl>
+                          <div className="text-xs text-muted-foreground text-right">
+                            {(field.value || '').length}/1000 caracteres
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}/>
+                    </div>
                   </>
                 ) : null
               )}/>

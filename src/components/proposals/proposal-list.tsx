@@ -460,19 +460,19 @@ export function ProposalList() {
                       </Select>
                   </div>
                 </div>
-                <div className="rounded-md border overflow-hidden">
+                <div className="rounded-md border overflow-hidden w-full">
                   <Table>
                     <TableHeader className="bg-muted/50">
                       <TableRow>
-                        <TableHead className="w-[80px] font-semibold py-4 text-center">Nº</TableHead>
-                        <TableHead className="w-[70px] font-semibold py-4 text-center">Data</TableHead>
-                        <TableHead className="w-[140px] hidden xl:table-cell font-semibold py-4 text-center">Criado por</TableHead>
-                        <TableHead className="w-[90px] font-semibold py-4 text-center">Tipo</TableHead>
-                        <TableHead className="w-[160px] font-semibold py-4 text-center">Nome</TableHead>
-                        <TableHead className="min-w-[180px] font-semibold py-4 text-center">Marca/Modelo</TableHead>
-                        <TableHead className="w-[60px] hidden lg:table-cell font-semibold py-4 text-center">Ano</TableHead>
-                        <TableHead className="w-[100px] hidden lg:table-cell font-semibold py-4 text-center">Valor</TableHead>
-                        <TableHead className="w-[80px] font-semibold py-4 text-center">Status</TableHead>
+                        <TableHead className="w-[60px] font-semibold py-4 text-center">Nº</TableHead>
+                        <TableHead className="w-[60px] font-semibold py-4 text-center">Data</TableHead>
+                        <TableHead className="w-[120px] hidden xl:table-cell font-semibold py-4 text-center">Criado por</TableHead>
+                        <TableHead className="w-[80px] font-semibold py-4 text-center">Tipo</TableHead>
+                        <TableHead className="w-[140px] font-semibold py-4 text-center">Nome</TableHead>
+                        <TableHead className="w-[150px] font-semibold py-4 text-center">Marca/Modelo</TableHead>
+                        <TableHead className="w-[50px] hidden lg:table-cell font-semibold py-4 text-center">Ano</TableHead>
+                        <TableHead className="w-[90px] hidden lg:table-cell font-semibold py-4 text-center">Valor</TableHead>
+                        <TableHead className="w-[70px] font-semibold py-4 text-center">Status</TableHead>
                         <TableHead className="w-[50px] py-4 text-center"><span className="sr-only">Ações</span></TableHead>
                       </TableRow>
                     </TableHeader>
