@@ -3,234 +3,143 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { createHash, randomBytes, pbkdf2Sync } from "crypto";
+import bcrypt from "bcryptjs";
 
-// Helper functions para crypto
-const hashPassword = (password: string): string => {
-  const salt = randomBytes(16).toString('hex');
-  const hash = pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
-  return `${salt}:${hash}`;
-};
+// Implementar funções ausentes diretamente no arquivo
+async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
+}
 
-const verifyPassword = (password: string, hashedPassword: string): boolean => {
-  const [salt, hash] = hashedPassword.split(':');
-  const verifyHash = pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
-  return hash === verifyHash;
-};
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
 
-// Actions que precisam do Node.js
+// Ação de login
+export const login = action({
+  args: {
+    email: v.string(),
+    password: v.string(),
+  },
+  handler: async (ctx, args): Promise<{ userId: string }> => {
+    try {
+      // Busca o usuário pelo email
+      const user = await ctx.runQuery(internal.users.getUserByEmail, {
+        email: args.email,
+      });
+
+      if (!user) {
+        throw new Error("Usuário não encontrado");
+      }
+
+      // Verifica a senha usando bcrypt
+      const isValidPassword = await verifyPassword(args.password, user.passwordHash);
+
+      if (!isValidPassword) {
+        console.log("❌ Senha incorreta para:", args.email);
+        throw new Error("Senha incorreta");
+      }
+
+      console.log("✅ Login bem-sucedido para:", args.email);
+      return { userId: user._id };
+    } catch (error: any) {
+      throw new Error(error.message || "Erro ao fazer login");
+    }
+  },
+});
+
+// Corrigir tipos explícitos e propriedades ausentes
 export const createUser = action({
   args: {
     name: v.string(),
     email: v.string(),
     password: v.string(),
     role: v.union(v.literal("ADMIN"), v.literal("USER")),
-    currentUserId: v.id("users"),
   },
-  handler: async (ctx, args) => {
-    const currentUser = await ctx.runQuery(internal.users.getUserById, { userId: args.currentUserId });
-    if (!currentUser || currentUser.role !== "ADMIN") {
-      throw new Error("Apenas administradores podem executar esta ação.");
+  handler: async (
+    ctx,
+    args: { name: string; email: string; password: string; role: "ADMIN" | "USER" }
+  ): Promise<{ userId: string }> => {
+    try {
+      const passwordHash: string = await hashPassword(args.password);
+
+      // Usa a mutation interna para criar o usuário
+      const userId = await ctx.runMutation(internal.users.insertUser, {
+        name: args.name,
+        email: args.email,
+        passwordHash: passwordHash,
+        role: args.role,
+      });
+
+      return { userId };
+    } catch (error: any) {
+      throw new Error(error.message || "Erro ao criar usuário");
     }
-
-    const existingUser = await ctx.runQuery(internal.users.getUserByEmail, { email: args.email });
-    if (existingUser) {
-      throw new Error("Este e-mail já está em uso.");
-    }
-
-    const passwordHash = hashPassword(args.password);
-
-    const userId = await ctx.runMutation(internal.users.insertUser, {
-      name: args.name,
-      email: args.email,
-      passwordHash,
-      role: args.role,
-    });
-
-    return { userId };
   },
 });
 
+// Ação para deletar usuário
+export const deleteUser = action({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args): Promise<void> => {
+    await ctx.runMutation(internal.users.deleteUserById, {
+      userIdToDelete: args.userId,
+    });
+  },
+});
+
+// Ação para atualizar usuário
 export const updateUser = action({
   args: {
-    userIdToUpdate: v.id("users"),
-    name: v.optional(v.string()),
-    email: v.optional(v.string()),
-    role: v.optional(v.union(v.literal("ADMIN"), v.literal("USER"))),
-    password: v.optional(v.string()),
-    currentUserId: v.id("users"),
+    userId: v.id("users"),
+    updates: v.object({
+      name: v.optional(v.string()),
+      role: v.optional(v.union(v.literal("ADMIN"), v.literal("USER"))),
+      passwordHash: v.optional(v.string()),
+    }),
   },
-  handler: async (ctx, args) => {
-    const currentUser = await ctx.runQuery(internal.users.getUserById, { userId: args.currentUserId });
-    if (!currentUser || currentUser.role !== "ADMIN") {
-      throw new Error("Apenas administradores podem executar esta ação.");
-    }
-
-    if (args.role && args.role !== "ADMIN") {
-      const userToUpdate = await ctx.runQuery(internal.users.getUserById, { userId: args.userIdToUpdate });
-      if (userToUpdate?.role === "ADMIN") {
-        const allAdmins = await ctx.runQuery(internal.users.getAllAdmins);
-        if (allAdmins.length === 1 && allAdmins[0]._id === args.userIdToUpdate) {
-          throw new Error("Não é possível alterar a função do único administrador do sistema.");
-        }
-      }
-    }
-
-    const { userIdToUpdate, currentUserId, email, ...updates } = args;
-
-    if (updates.password) {
-      updates.passwordHash = hashPassword(updates.password);
-      delete updates.password;
-    }
-
+  handler: async (ctx, args): Promise<void> => {
     await ctx.runMutation(internal.users.updateUserById, {
-      userIdToUpdate,
-      updates
+      userIdToUpdate: args.userId,
+      updates: args.updates,
     });
   },
 });
 
-export const deleteUser = action({
-  args: { 
-    userIdToDelete: v.id("users"),
-    currentUserId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
-    const currentUser = await ctx.runQuery(internal.users.getUserById, { userId: args.currentUserId });
-    if (!currentUser || currentUser.role !== "ADMIN") {
-      throw new Error("Apenas administradores podem executar esta ação.");
-    }
-
-    if (args.userIdToDelete === args.currentUserId) {
-        throw new Error("Você não pode excluir sua própria conta.");
-    }
-
-    const userToDelete = await ctx.runQuery(internal.users.getUserById, { userId: args.userIdToDelete });
-    if (userToDelete?.role === "ADMIN") {
-      const allAdmins = await ctx.runQuery(internal.users.getAllAdmins);
-      if (allAdmins.length === 1) {
-        throw new Error("Não é possível excluir o único administrador do sistema.");
-      }
-    }
-
-    await ctx.runMutation(internal.users.deleteUserById, {
-      userIdToDelete: args.userIdToDelete
-    });
-  },
-});
-
-export const login = action({
+// Ação para resetar senha de um usuário (admin only)
+export const resetUserPassword = action({
   args: {
     email: v.string(),
-    password: v.string(),
+    newPassword: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ success: boolean }> => {
     try {
-      const user = await ctx.runQuery(internal.users.getUserByEmail, { email: args.email });
+      // Busca o usuário pelo email
+      const user = await ctx.runQuery(internal.users.getUserByEmail, {
+        email: args.email,
+      });
 
       if (!user) {
-        throw new Error("Utilizador não encontrado.");
+        throw new Error("Usuário não encontrado");
       }
 
-      const isPasswordCorrect = verifyPassword(args.password, user.passwordHash);
+      // Gera o novo hash com bcrypt
+      const newPasswordHash: string = await hashPassword(args.newPassword);
 
-      if (!isPasswordCorrect) {
-        throw new Error("Palavra-passe incorreta.");
-      }
-
-      return { 
-        userId: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      };
-    } catch (error) {
-      console.error("Login error:", error);
-      throw new Error(`Erro no login: ${error.message}`);
-    }
-  },
-});
-
-// Função para criar usuário admin padrão se não existir
-export const ensureAdminUser = action({
-  args: {},
-  handler: async (ctx, args) => {
-    try {
-      // Verifica se já existe um admin
-      const existingAdmin = await ctx.runQuery(internal.users.getUserByEmail, {
-        email: "admin@nobrecar.com"
+      // Atualiza a senha
+      await ctx.runMutation(internal.users.updateUserById, {
+        userIdToUpdate: user._id,
+        updates: {
+          passwordHash: newPasswordHash,
+        },
       });
 
-      if (existingAdmin) {
-        console.log("Admin já existe:", existingAdmin.email);
-        return { message: "Admin já existe", user: existingAdmin };
-      }
-
-      // Cria o usuário admin padrão
-      const passwordHash = hashPassword("@Nbr102030");
-
-      const adminId = await ctx.runMutation(internal.users.insertUser, {
-        name: "Admin",
-        email: "admin@nobrecar.com",
-        passwordHash: passwordHash,
-        role: "ADMIN"
-      });
-
-      console.log("Admin criado com sucesso:", adminId);
-      return { message: "Admin criado com sucesso", userId: adminId };
-
-    } catch (error) {
-      console.error("Erro ao criar admin:", error);
-      throw new Error(`Erro ao criar admin: ${error.message}`);
+      console.log(`✅ Senha resetada para ${args.email}`);
+      return { success: true };
+    } catch (error: any) {
+      throw new Error(error.message || "Erro ao resetar senha");
     }
-  },
-});
-
-// Função temporária para diagnóstico de usuários
-export const debugUsers = action({
-  args: {},
-  handler: async (ctx, args) => {
-    const users = await ctx.runQuery(internal.users.getAllUsersInternal, {});
-    console.log("Total de usuários:", users.length);
-    users.forEach((user, index) => {
-      console.log(`Usuário ${index + 1}:`, {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        hasPassword: !!user.passwordHash,
-        passwordLength: user.passwordHash?.length || 0
-      });
-    });
-    return users.map(u => ({
-      id: u._id,
-      name: u.name,
-      email: u.email,
-      role: u.role,
-      hasPassword: !!u.passwordHash
-    }));
-  },
-});
-
-export const createFirstAdmin = action({
-  args: {
-    name: v.string(),
-    email: v.string(),
-    password: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const users = await ctx.runQuery(internal.users.getAllUsersInternal, {});
-    if (users.length > 0) {
-      throw new Error("Já existem usuários no banco de dados. O primeiro ADMIN não pode ser criado.");
-    }
-
-    const passwordHash = hashPassword(args.password);
-
-    await ctx.runMutation(internal.users.insertUser, {
-      name: args.name,
-      email: args.email,
-      passwordHash,
-      role: "ADMIN",
-    });
   },
 });

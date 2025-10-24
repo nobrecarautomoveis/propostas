@@ -63,7 +63,9 @@ export const getAllUsers = query({
       return result;
     } catch (error) {
       console.error("getAllUsers: Erro crítico:", error);
-      console.error("getAllUsers: Stack trace:", error.stack);
+      if (error instanceof Error) {
+        console.error("getAllUsers: Stack trace:", error.stack);
+      }
       // Em caso de erro, retorna array vazio em vez de falhar
       return [];
     }

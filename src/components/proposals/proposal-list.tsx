@@ -460,8 +460,8 @@ export function ProposalList() {
                       </Select>
                   </div>
                 </div>
-                <div className="rounded-md border overflow-hidden w-full">
-                  <Table>
+                <div className="rounded-md border overflow-x-auto w-full">
+                  <Table className="w-full">
                     <TableHeader className="bg-muted/50">
                       <TableRow>
                         <TableHead className="w-[60px] font-semibold py-4 text-center">Nº</TableHead>
