@@ -251,6 +251,42 @@ export const updateProposal = mutation({
   },
 });
 
+// Mutation para excluir uma proposta
+export const deleteProposal = mutation({
+  args: {
+    proposalId: v.id("proposals"),
+    userId: v.id("users"), // ID do usuário que está excluindo a proposta
+  },
+  handler: async (ctx, args) => {
+    try {
+      console.log("🗑️ Deletando proposta:", args.proposalId, "por usuário:", args.userId);
+
+      // Verifica se a proposta existe
+      const proposal = await ctx.db.get(args.proposalId);
+      if (!proposal) {
+        console.log("❌ Proposta não encontrada:", args.proposalId);
+        throw new Error("Proposta não encontrada.");
+      }
+
+      // Verifica se o usuário existe
+      const user = await ctx.db.get(args.userId);
+      if (!user) {
+        console.log("❌ Usuário não encontrado:", args.userId);
+        throw new Error("Usuário não encontrado.");
+      }
+
+      // Exclui a proposta
+      await ctx.db.delete(args.proposalId);
+      console.log("✅ Proposta excluída com sucesso:", args.proposalId);
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("❌ Erro ao excluir proposta:", error);
+      throw new Error(error.message || "Erro ao excluir proposta");
+    }
+  },
+});
+
 export const getAllProposalsInternal = internalQuery({
   args: {},
   handler: async (ctx) => {
