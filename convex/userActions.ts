@@ -137,6 +137,8 @@ export const resetUserPassword = action({
   },
   handler: async (ctx, args): Promise<{ success: boolean }> => {
     try {
+      console.log("🔄 Resetando senha para:", args.email);
+
       // Busca o usuário pelo email
       const user = await ctx.runMutation(internal.users.verifyLogin, {
         email: args.email,
@@ -144,8 +146,11 @@ export const resetUserPassword = action({
       });
 
       if (!user) {
+        console.log("❌ Usuário não encontrado:", args.email);
         throw new Error("Usuário não encontrado");
       }
+
+      console.log("✅ Usuário encontrado:", user._id);
 
       // Gera o novo hash (texto plano por enquanto)
       const newPasswordHash: string = await hashPassword(args.newPassword);
@@ -161,6 +166,7 @@ export const resetUserPassword = action({
       console.log(`✅ Senha resetada para ${args.email}`);
       return { success: true };
     } catch (error: any) {
+      console.error("❌ Erro ao resetar senha:", error);
       throw new Error(error.message || "Erro ao resetar senha");
     }
   },
