@@ -91,6 +91,32 @@ export const getUserByEmail = internalQuery({
   },
 });
 
+// Mutation interna para verificar login
+export const verifyLogin = internalMutation({
+  args: {
+    email: v.string(),
+    passwordHash: v.string()
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .unique();
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      _id: user._id,
+      email: user.email,
+      passwordHash: user.passwordHash,
+      name: user.name,
+      role: user.role
+    };
+  },
+});
+
 export const insertUser = internalMutation({
   args: {
     name: v.string(),

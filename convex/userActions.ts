@@ -30,10 +30,11 @@ export const login = action({
         throw new Error("Email e senha são obrigatórios");
       }
 
-      // Busca o usuário pelo email
+      // Busca o usuário pelo email usando mutation interna
       console.log("🔍 Buscando usuário com email:", args.email);
-      const user = await ctx.runQuery(internal.users.getUserByEmail, {
+      const user = await ctx.runMutation(internal.users.verifyLogin, {
         email: args.email,
+        passwordHash: "" // Não precisa aqui, apenas para buscar
       });
 
       if (!user) {
