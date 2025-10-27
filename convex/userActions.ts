@@ -23,16 +23,34 @@ export const login = action({
   },
   handler: async (ctx, args): Promise<{ userId: string }> => {
     try {
+      console.log("🔐 Iniciando login para:", args.email);
+
+      // Validar inputs
+      if (!args.email || !args.password) {
+        throw new Error("Email e senha são obrigatórios");
+      }
+
       // Busca o usuário pelo email
+      console.log("🔍 Buscando usuário com email:", args.email);
       const user = await ctx.runQuery(internal.users.getUserByEmail, {
         email: args.email,
       });
 
       if (!user) {
+        console.log("❌ Usuário não encontrado:", args.email);
         throw new Error("Usuário não encontrado");
       }
 
+      console.log("✅ Usuário encontrado:", user._id);
+
+      // Verifica se o usuário tem passwordHash
+      if (!user.passwordHash) {
+        console.log("❌ Usuário sem passwordHash:", args.email);
+        throw new Error("Usuário não tem senha configurada");
+      }
+
       // Verifica a senha usando bcrypt
+      console.log("🔑 Verificando senha...");
       const isValidPassword = await verifyPassword(args.password, user.passwordHash);
 
       if (!isValidPassword) {
@@ -40,9 +58,10 @@ export const login = action({
         throw new Error("Senha incorreta");
       }
 
-      console.log("✅ Login bem-sucedido para:", args.email);
+      console.log("✅ Login bem-sucedido para:", args.email, "userId:", user._id);
       return { userId: user._id };
     } catch (error: any) {
+      console.error("❌ Erro ao fazer login:", error);
       throw new Error(error.message || "Erro ao fazer login");
     }
   },
