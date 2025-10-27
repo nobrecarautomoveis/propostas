@@ -117,21 +117,42 @@ export const createProposal = mutation({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const { userId, ...proposalData } = args;
-    const user = await ctx.db.get(userId);
-    if (!user) throw new Error("Usuário não encontrado.");
+    try {
+      const { userId, ...proposalData } = args;
 
-    const all = await ctx.db.query("proposals").collect();
-    const proposalNumber = `PROP-${String(all.length + 1).padStart(3, '0')}`;
+      // Validar userId
+      if (!userId) {
+        throw new Error("userId é obrigatório");
+      }
 
-    const id = await ctx.db.insert("proposals", {
-      ...proposalData,
-      proposalNumber,
-      dateAdded: new Date().toISOString(),
-      salespersonId: userId,
-    });
+      const user = await ctx.db.get(userId);
+      if (!user) {
+        throw new Error(`Usuário não encontrado com ID: ${userId}`);
+      }
 
-    return { proposalId: id, proposalNumber };
+      // Validar campos obrigatórios
+      const requiredFields = ['proposalType', 'vehicleType', 'isFinanced', 'vehicleCondition', 'brand', 'brandName', 'model', 'modelName', 'modelYear', 'manufactureYear', 'fuel', 'transmission', 'color', 'value', 'licensingLocation', 'status'];
+      const missingFields = requiredFields.filter(field => !(field in proposalData) || proposalData[field as keyof typeof proposalData] === undefined || proposalData[field as keyof typeof proposalData] === null || proposalData[field as keyof typeof proposalData] === '');
+
+      if (missingFields.length > 0) {
+        throw new Error(`Campos obrigatórios faltando: ${missingFields.join(', ')}`);
+      }
+
+      const all = await ctx.db.query("proposals").collect();
+      const proposalNumber = `PROP-${String(all.length + 1).padStart(3, '0')}`;
+
+      const id = await ctx.db.insert("proposals", {
+        ...proposalData,
+        proposalNumber,
+        dateAdded: new Date().toISOString(),
+        salespersonId: userId,
+      });
+
+      return { proposalId: id, proposalNumber };
+    } catch (error) {
+      console.error("❌ Erro ao criar proposta:", error);
+      throw error;
+    }
   },
 });
 
