@@ -188,6 +188,8 @@ export function ProposalList() {
                   bancoDaycoval,
                   bancoSim,
                   bancoCreditas,
+                  bancoCrefaz,
+                  bancoSimpala,
                   ...restData
                 } = data;
 
@@ -212,6 +214,8 @@ export function ProposalList() {
                   bancoDaycoval,
                   bancoSim,
                   bancoCreditas,
+                  bancoCrefaz,
+                  bancoSimpala,
                 };
 
                 // Verificar se tem algum campo de banco definido

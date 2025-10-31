@@ -240,6 +240,8 @@ export const updateProposal = mutation({
     bancoDaycoval: v.optional(v.boolean()),
     bancoSim: v.optional(v.boolean()),
     bancoCreditas: v.optional(v.boolean()),
+    bancoCrefaz: v.optional(v.boolean()),
+    bancoSimpala: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { proposalId, userId, ...updateData } = args;
@@ -311,6 +313,8 @@ export const updateBankAnalysis = mutation({
     bancoDaycoval: v.optional(v.boolean()),
     bancoSim: v.optional(v.boolean()),
     bancoCreditas: v.optional(v.boolean()),
+    bancoCrefaz: v.optional(v.boolean()),
+    bancoSimpala: v.optional(v.boolean()),
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {

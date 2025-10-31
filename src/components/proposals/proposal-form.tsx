@@ -296,6 +296,8 @@ const formSchema = z.object({
   bancoDaycoval: z.boolean().optional(),
   bancoSim: z.boolean().optional(),
   bancoCreditas: z.boolean().optional(),
+  bancoCrefaz: z.boolean().optional(),
+  bancoSimpala: z.boolean().optional(),
 
   // Campo para controlar tipo de pessoa
   tipoPessoa: z.enum(['fisica', 'juridica']).default('fisica'),
@@ -2834,6 +2836,36 @@ export function ProposalForm({ onSubmit, initialData }: ProposalFormProps) {
                         checked={field.value || false}
                         onCheckedChange={field.onChange}
                         aria-label="Creditas"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+
+                <FormField control={form.control} name="bancoCrefaz" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Crefaz</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Crefaz"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}/>
+
+                <FormField control={form.control} name="bancoSimpala" render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Simpala</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                        aria-label="Simpala"
                       />
                     </FormControl>
                   </FormItem>

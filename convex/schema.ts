@@ -106,6 +106,8 @@ export default defineSchema({
     bancoDaycoval: v.optional(v.boolean()),
     bancoSim: v.optional(v.boolean()),
     bancoCreditas: v.optional(v.boolean()),
+    bancoCrefaz: v.optional(v.boolean()),
+    bancoSimpala: v.optional(v.boolean()),
   })
   .index("by_salesperson", ["salespersonId"])
   .index("by_proposalNumber", ["proposalNumber"]),
