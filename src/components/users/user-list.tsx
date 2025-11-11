@@ -102,9 +102,8 @@ export function UserList() {
         await createUser({
           name: data.name,
           email: data.email,
-          password: data.password, // Corrigido de passwordHash para password
+          password: data.password,
           role: data.role,
-          currentUserId: currentUser._id // Adicionado currentUserId necessário
         });
         toast.success('Usuário criado com sucesso!');
       }

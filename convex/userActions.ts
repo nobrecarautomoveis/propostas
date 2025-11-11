@@ -82,6 +82,34 @@ export const createUser = action({
     args: { name: string; email: string; password: string; role: "ADMIN" | "USER" }
   ): Promise<{ userId: string }> => {
     try {
+      console.log("👤 Criando novo usuário:", args.name, args.email);
+
+      // Validar inputs
+      if (!args.name || !args.email || !args.password) {
+        throw new Error("Nome, email e senha são obrigatórios");
+      }
+
+      // Validar formato do email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(args.email)) {
+        throw new Error("Email inválido");
+      }
+
+      // Validar comprimento da senha
+      if (args.password.length < 6) {
+        throw new Error("Senha deve ter pelo menos 6 caracteres");
+      }
+
+      // Verificar se email já existe usando query interna
+      const existingUser = await ctx.runQuery(internal.users.getUserByEmail, {
+        email: args.email,
+      });
+
+      if (existingUser) {
+        console.log("❌ Email já existe:", args.email);
+        throw new Error(`Email ${args.email} já está registrado`);
+      }
+
       const passwordHash: string = await hashPassword(args.password);
 
       // Usa a mutation interna para criar o usuário
@@ -92,8 +120,10 @@ export const createUser = action({
         role: args.role,
       });
 
+      console.log("✅ Usuário criado com sucesso:", userId);
       return { userId };
     } catch (error: any) {
+      console.error("❌ Erro ao criar usuário:", error);
       throw new Error(error.message || "Erro ao criar usuário");
     }
   },
